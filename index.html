@@ -326,9 +326,9 @@ if(m._fileMap){for(var k in m._fileMap){if(k.indexOf(prefix)===0&&k.indexOf(sani
 if(!fileUrl){fileUrl='https://github.com/'+GH_OWNER+'/'+GH_REPO+'/blob/main/messages/files/'+prefix+'_'+sanitized}
 if(!imgUrl){imgUrl='https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/main/messages/files/'+prefix+'_'+sanitized}
 if(f.type&&f.type.indexOf('image')===0){
-filesHtml+='<a href="'+fileUrl+'" target="_blank" class="chat-file"><img src="'+imgUrl+'" alt="'+escapeHtml(f.name)+'" onerror="this.style.display=\'none\'"></a>';
+filesHtml+='<a href="javascript:downloadFile(\''+imgUrl+'\',\''+escapeHtml(f.name)+'\')" class="chat-file"><img src="'+imgUrl+'" alt="'+escapeHtml(f.name)+'" onerror="this.style.display=\'none\'"></a>';
 }else{
-filesHtml+='<a href="'+fileUrl+'" target="_blank" class="chat-file"><span class="chat-file-icon">'+ext+'</span><span>'+escapeHtml(f.name.substring(0,20))+'</span></a>';
+filesHtml+='<a href="javascript:downloadFile(\''+imgUrl+'\',\''+escapeHtml(f.name)+'\')" class="chat-file"><span class="chat-file-icon">'+ext+'</span><span>'+escapeHtml(f.name.substring(0,20))+'</span></a>';
 }});
 filesHtml+='</div>';
 }
@@ -378,6 +378,18 @@ function deleteMessage(path){if(!confirm('Message delete karein?'))return;fetch(
 function saveSettings(){store.adminNumber=document.getElementById('set-admin-number').value.trim();saveStore(store);var a=document.getElementById('settings-alert');a.className='alert alert-success show';a.textContent='Settings save hui!';setTimeout(function(){a.classList.remove('show')},3000)}
 function changePassword(){var np=document.getElementById('set-new-pass').value;var a=document.getElementById('pass-alert');if(np.length<4){a.className='alert alert-error show';a.textContent='Kam se kam 4 character';return}store.password=np;saveStore(store);a.className='alert alert-success show';a.textContent='Password updated!';document.getElementById('set-new-pass').value='';setTimeout(function(){a.classList.remove('show')},3000)}
 function switchTab(e,name){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});e.target.classList.add('active');document.getElementById('tab-'+name).classList.add('active');if(name==='messages')loadMessages()}
+
+/* Download file on click - works for images, PDFs, all files */
+function downloadFile(url,filename){
+var a=document.createElement('a');
+a.href=url;
+a.download=filename||'download';
+a.target='_blank';
+a.rel='noopener';
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+}
 
 /* Public status check */
 function checkAdminOnline(){
