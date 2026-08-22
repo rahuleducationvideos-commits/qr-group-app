@@ -78,10 +78,18 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .chat-bubble-name{font-size:.72rem;font-weight:600;margin-bottom:.2rem;opacity:.8}
 .chat-bubble-time{font-size:.65rem;opacity:.6;margin-top:.25rem;text-align:right;font-family:var(--font-mono)}
 .chat-bubble-files{margin-top:.4rem;display:flex;flex-wrap:wrap;gap:.3rem}
-.chat-file{display:inline-flex;align-items:center;gap:.3rem;background:rgba(255,255,255,.15);border-radius:6px;padding:.25rem .5rem;font-size:.72rem;text-decoration:none;color:inherit;transition:.2s}
-.chat-file:hover{background:rgba(255,255,255,.3)}
-.chat-file img{width:60px;height:60px;object-fit:cover;border-radius:4px}
-.chat-file-icon{font-family:var(--font-mono);font-size:.6rem;font-weight:600;background:rgba(255,255,255,.2);padding:.1rem .3rem;border-radius:3px;text-transform:uppercase}
+.chat-file{display:flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.12);border-radius:10px;padding:.5rem .65rem;font-size:.78rem;text-decoration:none;color:inherit;transition:.2s;cursor:pointer;margin-bottom:.3rem;min-width:160px;max-width:220px}
+.chat-file:hover{background:rgba(255,255,255,.22)}
+.chat-file:active{transform:scale(.97)}
+.chat-file img{width:100px;height:100px;object-fit:cover;border-radius:8px;flex-shrink:0}
+.chat-file-body{flex:1;min-width:0}
+.chat-file-name{font-size:.76rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.chat-file-meta{font-size:.65rem;opacity:.7;font-family:var(--font-mono);display:flex;align-items:center;gap:.3rem;margin-top:.15rem}
+.chat-file-icon{font-family:var(--font-mono);font-size:.55rem;font-weight:700;background:rgba(255,255,255,.25);padding:.15rem .35rem;border-radius:4px;text-transform:uppercase;flex-shrink:0}
+.chat-file-dl{font-size:.85rem;flex-shrink:0;opacity:.8}
+.chat-file.loading{opacity:.5;pointer-events:none}
+.chat-file-img-wrap{position:relative;width:100px;height:100px;flex-shrink:0}
+.chat-file-img-overlay{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.7rem}
 .chat-bubble-actions{margin-top:.4rem;display:flex;gap:.3rem}
 .chat-bubble-actions .btn{padding:.3rem .6rem;font-size:.72rem;width:auto;border-radius:6px}
 /* Reply bar */
@@ -321,15 +329,16 @@ m.files.forEach(function(f){
 var ext=getFileExt(f.name);
 var sanitized=f.name.replace(/[^a-zA-Z0-9.]/g,'_');
 var prefix='msg_'+m.id;
-var fileUrl='';var imgUrl='';
-if(m._fileMap){for(var k in m._fileMap){if(k.indexOf(prefix)===0&&k.indexOf(sanitized)>=0){fileUrl=m._fileMap[k].html_url;imgUrl=m._fileMap[k].download_url;break}}}
-if(!fileUrl){fileUrl='https://github.com/'+GH_OWNER+'/'+GH_REPO+'/blob/main/messages/files/'+prefix+'_'+sanitized}
-if(!imgUrl){imgUrl='https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/main/messages/files/'+prefix+'_'+sanitized}
+var fileUrl='';var dlUrl='';
+if(m._fileMap){for(var k in m._fileMap){if(k.indexOf(prefix)===0&&k.indexOf(sanitized)>=0){fileUrl=m._fileMap[k].html_url;dlUrl=m._fileMap[k].download_url;break}}}
+if(!dlUrl){dlUrl='https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/main/messages/files/'+prefix+'_'+sanitized}
+var fName=f.name.length>22?f.name.substring(0,20)+'..':f.name;
 if(f.type&&f.type.indexOf('image')===0){
-filesHtml+='<a href="javascript:downloadFile(\''+imgUrl+'\',\''+escapeHtml(f.name)+'\')" class="chat-file"><img src="'+imgUrl+'" alt="'+escapeHtml(f.name)+'" onerror="this.style.display=\'none\'"></a>';
+filesHtml+='<div class="chat-file" onclick="downloadFile(this,\''+dlUrl+'\',\''+escapeHtml(f.name).replace(/'/g,'')+'\')"><div class="chat-file-img-wrap"><img src="'+dlUrl+'" alt="'+escapeHtml(f.name)+'" onerror="this.parentNode.style.display=\'none\'"><div class="chat-file-img-overlay">&#8595;</div></div><div class="chat-file-body"><span class="chat-file-name">'+escapeHtml(fName)+'</span><span class="chat-file-meta"><span class="chat-file-icon">'+ext+'</span>'+formatSize(f.size)+'</span></div></div>';
 }else{
-filesHtml+='<a href="javascript:downloadFile(\''+imgUrl+'\',\''+escapeHtml(f.name)+'\')" class="chat-file"><span class="chat-file-icon">'+ext+'</span><span>'+escapeHtml(f.name.substring(0,20))+'</span></a>';
-}});
+filesHtml+='<div class="chat-file" onclick="downloadFile(this,\''+dlUrl+'\',\''+escapeHtml(f.name).replace(/'/g,'')+'\')"><span class="chat-file-icon">'+ext+'</span><div class="chat-file-body"><span class="chat-file-name">'+escapeHtml(fName)+'</span><span class="chat-file-meta">'+formatSize(f.size)+'</span></div><span class="chat-file-dl">&#8595;</span></div>';
+}
+});
 filesHtml+='</div>';
 }
 var actions='';
@@ -379,16 +388,21 @@ function saveSettings(){store.adminNumber=document.getElementById('set-admin-num
 function changePassword(){var np=document.getElementById('set-new-pass').value;var a=document.getElementById('pass-alert');if(np.length<4){a.className='alert alert-error show';a.textContent='Kam se kam 4 character';return}store.password=np;saveStore(store);a.className='alert alert-success show';a.textContent='Password updated!';document.getElementById('set-new-pass').value='';setTimeout(function(){a.classList.remove('show')},3000)}
 function switchTab(e,name){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});e.target.classList.add('active');document.getElementById('tab-'+name).classList.add('active');if(name==='messages')loadMessages()}
 
-/* Download file on click - works for images, PDFs, all files */
-function downloadFile(url,filename){
+/* Download file on click - fetch blob then download (works cross-origin, supports print) */
+function downloadFile(el,url,filename){
+if(el){el.classList.add('loading');var oldHTML=el.innerHTML;el.innerHTML='<span style="font-size:.72rem;opacity:.7">Downloading...</span>'}
+fetch(url).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.blob()}).then(function(blob){
+var u=URL.createObjectURL(blob);
 var a=document.createElement('a');
-a.href=url;
-a.download=filename||'download';
-a.target='_blank';
-a.rel='noopener';
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
+a.href=u;a.download=filename||'download';
+document.body.appendChild(a);a.click();document.body.removeChild(a);
+setTimeout(function(){URL.revokeObjectURL(u)},10000);
+if(el){el.classList.remove('loading');el.innerHTML=oldHTML}
+}).catch(function(){
+/* Fallback: open in new tab for print/save */
+window.open(url,'_blank');
+if(el){el.classList.remove('loading');el.innerHTML=oldHTML}
+});
 }
 
 /* Public status check */
