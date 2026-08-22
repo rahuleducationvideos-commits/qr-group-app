@@ -18,7 +18,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .nav-brand span{color:var(--text-dim)}
 .nav-btn{background:var(--surface-2);color:var(--text-dim);border:1px solid var(--border);border-radius:8px;padding:.5rem 1rem;font-family:var(--font-mono);font-size:.85rem;cursor:pointer;transition:.2s}
 .nav-btn:hover{color:var(--accent);border-color:var(--accent)}
-.container{max-width:680px;margin:0 auto;padding:2rem 1.25rem 4rem;width:100%}
+.container{max-width:100%;margin:0 auto;padding:.5rem .5rem 4rem;width:100%}
 .hero{text-align:center;margin-bottom:2rem}
 .hero h1{font-size:1.75rem;font-weight:700;letter-spacing:-.03em;margin-bottom:.5rem}
 .hero p{color:var(--text-dim);font-size:.95rem}
@@ -65,12 +65,12 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .tab-panel{display:none}.tab-panel.active{display:block}
 /* Chat area */
-.chat-area{background:var(--chat-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;max-height:65vh}
+.chat-area{background:var(--chat-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;max-height:88vh}
 .chat-header{background:var(--surface);padding:.75rem 1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .chat-header-info{display:flex;align-items:center;gap:.6rem}
 .chat-header-name{font-weight:600;font-size:.9rem}
 .chat-header-status{font-size:.72rem;color:var(--text-dim)}
-.chat-messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.6rem}
+.chat-messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.6rem;scroll-behavior:smooth}
 .chat-bubble{max-width:80%;padding:.6rem .85rem;border-radius:12px;font-size:.88rem;word-wrap:break-word;white-space:pre-wrap;position:relative;animation:fadeIn .2s ease}
 .chat-bubble.user{align-self:flex-start;background:var(--bubble-user);border-bottom-left-radius:4px;color:var(--text)}
 .chat-bubble.admin{align-self:flex-end;background:var(--bubble-admin);border-bottom-right-radius:4px;color:#fff}
@@ -108,7 +108,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .empty{text-align:center;padding:2rem;color:var(--text-dim)}
 /* Admin nav with online status */
 .admin-nav{position:relative}
-@media(max-width:520px){.stats{grid-template-columns:1fr}.hero h1{font-size:1.4rem}.chat-area{max-height:70vh}.chat-bubble{max-width:90%}}
+@media(max-width:520px){.stats{grid-template-columns:repeat(3,1fr);gap:.4rem}.stat{padding:.4rem}.stat-num{font-size:1rem}.stat-label{font-size:.6rem}.hero h1{font-size:1.2rem}.hero p{font-size:.8rem}.hero{margin-bottom:.8rem}.chat-area{max-height:90vh}.chat-bubble{max-width:88%}}
 </style>
 </head>
 <body>
@@ -200,6 +200,17 @@ function saveStore(s){try{localStorage.setItem(STORE_KEY,JSON.stringify(s))}catc
 function defaults(){return{password:'admin123',adminNumber:'',lastMsgCount:0}}
 function ensureStore(){var s=getStore();var d=defaults();for(var k in d)if(s[k]===undefined)s[k]=d[k];saveStore(s);return s}
 var store=ensureStore();var isAdmin=false;
+/* Remote config - fetches password + adminNumber from config.json on GitHub */
+var remoteConfig={password:'admin123',adminNumber:''};
+function loadRemoteConfig(){
+fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
+var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+remoteConfig=JSON.parse(content);
+store.password=remoteConfig.password||'admin123';
+store.adminNumber=remoteConfig.adminNumber||'';
+saveStore(store);
+}).catch(function(){})
+}
 var GH_TOKEN=atob('Z2hwXzJIM0JsSA==')+atob('M0pQcHJlS0FRdA==')+atob('S25zQmVibXhGTUJ6UlIyOWZLTGQ=');
 var GH_API='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO;
 var pollTimer=null;
@@ -281,9 +292,9 @@ function initFileUpload(){var drop=document.getElementById('file-drop');var inpu
 function renderFileList(){var list=document.getElementById('file-list');var input=document.getElementById('file-input');if(!input.files||input.files.length===0){list.innerHTML='';return}list.innerHTML='';for(var i=0;i<input.files.length;i++){var f=input.files[i];var chip=document.createElement('div');chip.className='file-chip';chip.innerHTML='<span class="file-chip-icon">'+getFileExt(f.name)+'</span><span class="file-chip-name">'+escapeHtml(f.name)+'</span><span class="file-chip-size">'+formatSize(f.size)+'</span>';list.appendChild(chip)}}
 
 /* Admin */
-function adminLogin(e){e.preventDefault();store=ensureStore();if(document.getElementById('admin-pass').value===store.password){isAdmin=true;showPage('page-admin')}else{var a=document.getElementById('login-alert');a.className='alert alert-error show';a.textContent='Galat password!';setTimeout(function(){a.classList.remove('show')},3000)}return false}
+function adminLogin(e){e.preventDefault();loadRemoteConfig();var entered=document.getElementById('admin-pass').value;setTimeout(function(){var pass=remoteConfig.password||store.password||'admin123';if(entered===pass){isAdmin=true;showPage('page-admin')}else{var a=document.getElementById('login-alert');a.className='alert alert-error show';a.textContent='Galat password!';setTimeout(function(){a.classList.remove('show')},3000)}},800);return false}
 function adminLogout(){isAdmin=false;stopPolling();showPage('page-public')}
-function renderAdmin(){if(!isAdmin){showPage('page-admin-login');return}store=ensureStore();document.getElementById('set-admin-number').value=store.adminNumber||'';loadMessages()}
+function renderAdmin(){if(!isAdmin){showPage('page-admin-login');return}loadRemoteConfig();store=ensureStore();document.getElementById('set-admin-number').value=store.adminNumber||'';loadMessages()}
 
 /* Load messages as chat */
 function loadMessages(){
@@ -384,8 +395,37 @@ document.getElementById('stat-files').textContent=totalFiles;
 function deleteMessage(path){if(!confirm('Message delete karein?'))return;fetch(GH_API+'/contents/'+path,{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){return fetch(GH_API+'/contents/'+path,{method:'DELETE',headers:ghHeaders(),body:JSON.stringify({message:'Delete message',sha:data.sha})})}).then(function(){loadMessages()}).catch(function(){alert('Delete nahi hua.')})}
 
 /* Settings */
-function saveSettings(){store.adminNumber=document.getElementById('set-admin-number').value.trim();saveStore(store);var a=document.getElementById('settings-alert');a.className='alert alert-success show';a.textContent='Settings save hui!';setTimeout(function(){a.classList.remove('show')},3000)}
-function changePassword(){var np=document.getElementById('set-new-pass').value;var a=document.getElementById('pass-alert');if(np.length<4){a.className='alert alert-error show';a.textContent='Kam se kam 4 character';return}store.password=np;saveStore(store);a.className='alert alert-success show';a.textContent='Password updated!';document.getElementById('set-new-pass').value='';setTimeout(function(){a.classList.remove('show')},3000)}
+function saveSettings(){
+var num=document.getElementById('set-admin-number').value.trim();
+var a=document.getElementById('settings-alert');
+a.className='alert alert-success show';a.textContent='GitHub pe save ho raha hai...';
+fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
+var newConfig={password:remoteConfig.password||store.password||'admin123',adminNumber:num};
+var content=btoa(unescape(encodeURIComponent(JSON.stringify(newConfig,null,2))));
+fetch(GH_API+'/contents/config.json',{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Update admin number',content:content,sha:data.sha})}).then(function(r){return r.json()}).then(function(){
+store.adminNumber=num;saveStore(store);remoteConfig.adminNumber=num;
+a.className='alert alert-success show';a.textContent='Settings sabhi devices pe update hui!';
+setTimeout(function(){a.classList.remove('show')},4000);
+}).catch(function(err){a.className='alert alert-error show';a.textContent='Error: '+(err.message||'Save nahi hua')})
+}).catch(function(){a.className='alert alert-error show';a.textContent='config.json fetch nahi hua'})
+}
+function changePassword(){
+var np=document.getElementById('set-new-pass').value;
+var a=document.getElementById('pass-alert');
+if(np.length<4){a.className='alert alert-error show';a.textContent='Kam se kam 4 character';return}
+a.className='alert alert-success show';a.textContent='GitHub pe save ho raha hai...';
+/* Save to config.json on GitHub - works on all devices */
+fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
+var newConfig={password:np,adminNumber:document.getElementById('set-admin-number').value.trim()||''};
+var content=btoa(unescape(encodeURIComponent(JSON.stringify(newConfig,null,2))));
+fetch(GH_API+'/contents/config.json',{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Update password',content:content,sha:data.sha})}).then(function(r){return r.json()}).then(function(){
+store.password=np;saveStore(store);remoteConfig.password=np;
+a.className='alert alert-success show';a.textContent='Password sabhi devices pe update ho gaya!';
+document.getElementById('set-new-pass').value='';
+setTimeout(function(){a.classList.remove('show')},4000);
+}).catch(function(err){a.className='alert alert-error show';a.textContent='Error: '+(err.message||'GitHub pe save nahi hua')})
+}).catch(function(){a.className='alert alert-error show';a.textContent='config.json fetch nahi hua'})
+}
 function switchTab(e,name){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});e.target.classList.add('active');document.getElementById('tab-'+name).classList.add('active');if(name==='messages')loadMessages()}
 
 /* Download file on click - fetch blob then download (works cross-origin, supports print) */
@@ -415,6 +455,7 @@ txt.textContent='Admin Online';
 }
 }
 checkAdminOnline();
+loadRemoteConfig();
 
 initFileUpload();
 </script>
