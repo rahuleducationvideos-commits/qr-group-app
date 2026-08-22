@@ -483,11 +483,13 @@ if(isAdmin){
 fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
 var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 var cfg=JSON.parse(content);
-if(cfg.pwChangeTs&&store.pwChangeTs&&cfg.pwChangeTs!==store.pwChangeTs){
-/* Password changed on another device - auto logout */
+var remotePass=cfg.password||'admin123';
+var localPass=store.password||'admin123';
+/* If remote password differs from what we logged in with, force logout */
+if(remotePass!==localPass){
 stopPolling();
 isAdmin=false;
-alert('Password change ho gaya hai! Dobara login karein.');
+alert('Password change ho gaya hai! Naye password se login karein.');
 showPage('page-admin-login');
 }
 }).catch(function(){});
@@ -540,7 +542,7 @@ fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){ret
 var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 var cfg=JSON.parse(content);
 var pass=cfg.password||'admin123';
-if(entered===pass){remoteConfig=cfg;store.password=pass;store.adminNumber=cfg.adminNumber||'';if(cfg.pwChangeTs){store.pwChangeTs=cfg.pwChangeTs}saveStore(store);isAdmin=true;if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
+if(entered===pass){remoteConfig=cfg;store.password=pass;store.adminNumber=cfg.adminNumber||'';saveStore(store);isAdmin=true;if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
 else{if(btn){btn.disabled=false;btn.textContent='Login'}var a=document.getElementById('login-alert');a.className='alert alert-error show';a.textContent='Galat password!';setTimeout(function(){a.classList.remove('show')},3000)}
 }).catch(function(){
 /* Fallback to local password */
@@ -682,18 +684,23 @@ var np=document.getElementById('set-new-pass').value;
 var a=document.getElementById('pass-alert');
 if(np.length<4){a.className='alert alert-error show';a.textContent='Kam se kam 4 character';return}
 a.className='alert alert-success show';a.textContent='GitHub pe save ho raha hai...';
-var changeTs=Date.now();
 /* Save to config.json on GitHub - works on all devices */
 fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
-var newConfig={password:np,adminNumber:document.getElementById('set-admin-number').value.trim()||'',pwChangeTs:changeTs};
+var newConfig={password:np,adminNumber:document.getElementById('set-admin-number').value.trim()||''};
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(newConfig,null,2))));
 fetch(GH_API+'/contents/config.json',{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Update password',content:content,sha:data.sha})}).then(function(r){return r.json()}).then(function(){
-/* DON'T update store.pwChangeTs here - so polling detects mismatch and auto-logouts ALL devices including this one */
+/* DON'T update store.password locally - so polling detects mismatch and auto-logouts ALL devices */
 remoteConfig.password=np;
-store.password=np;saveStore(store);
-a.className='alert alert-success show';a.textContent='Password update ho gaya! 5 second me sabhi devices se logout ho jayega.';
+a.className='alert alert-success show';a.textContent='Password update ho gaya! 5 second me is device se bhi logout ho jayega.';
 document.getElementById('set-new-pass').value='';
-setTimeout(function(){a.classList.remove('show')},5000);
+/* Force logout THIS device immediately after password change */
+setTimeout(function(){
+stopPolling();isAdmin=false;
+closeSettings();
+alert('Password change ho gaya! Naye password se login karein.');
+showPage('page-admin-login');
+},2000);
+setTimeout(function(){a.classList.remove('show')},2000);
 }).catch(function(err){a.className='alert alert-error show';a.textContent='Error: '+(err.message||'GitHub pe save nahi hua')})
 }).catch(function(){a.className='alert alert-error show';a.textContent='config.json fetch nahi hua'})
 }
@@ -764,6 +771,28 @@ txt.textContent='Admin Online';
 }
 checkAdminOnline();
 loadRemoteConfig();
+
+/* On page load, check if password was changed from another device */
+function checkPasswordChanged(){
+fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
+var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+var cfg=JSON.parse(content);
+var remotePass=cfg.password||'admin123';
+var localPass=store.password||'admin123';
+if(remotePass!==localPass){
+/* Password changed remotely - update local and force re-login */
+store.password=remotePass;saveStore(store);
+if(isAdmin){
+stopPolling();isAdmin=false;
+alert('Password change ho gaya hai! Naye password se login karein.');
+showPage('page-admin-login');
+}
+} else {
+store.password=remotePass;saveStore(store);
+}
+}).catch(function(){});
+}
+checkPasswordChanged();
 
 initFileUpload();
 </script>
