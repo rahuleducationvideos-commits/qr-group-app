@@ -75,23 +75,23 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .chat-bubble.user{align-self:flex-start;background:var(--bubble-user);border-bottom-left-radius:4px;color:var(--text)}
 .chat-bubble.admin{align-self:flex-end;background:var(--bubble-admin);border-bottom-right-radius:4px;color:#fff}
 @media(prefers-color-scheme:light){.chat-bubble.user{color:#0f172a}.chat-bubble.admin{color:#0f172a}}
-.chat-bubble-name{font-size:.72rem;font-weight:600;margin-bottom:.2rem;opacity:.8}
-.chat-bubble-time{font-size:.65rem;opacity:.6;margin-top:.25rem;text-align:right;font-family:var(--font-mono)}
-.chat-bubble-files{margin-top:.4rem;display:flex;flex-wrap:wrap;gap:.3rem}
+.wa-bubble-name{font-size:.72rem;font-weight:600;margin-bottom:.2rem;opacity:.8}
+.wa-bubble-time{font-size:.65rem;opacity:.6;margin-top:.25rem;text-align:right;font-family:var(--font-mono)}
+.wa-bubble-files{margin-top:.4rem;display:flex;flex-wrap:wrap;gap:.3rem}
 .chat-file{display:flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.12);border-radius:10px;padding:.5rem .65rem;font-size:.78rem;text-decoration:none;color:inherit;transition:.2s;cursor:pointer;margin-bottom:.3rem;min-width:160px;max-width:220px}
 .chat-file:hover{background:rgba(255,255,255,.22)}
 .chat-file:active{transform:scale(.97)}
 .chat-file img{width:100px;height:100px;object-fit:cover;border-radius:8px;flex-shrink:0}
-.chat-file-body{flex:1;min-width:0}
-.chat-file-name{font-size:.76rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-.chat-file-meta{font-size:.65rem;opacity:.7;font-family:var(--font-mono);display:flex;align-items:center;gap:.3rem;margin-top:.15rem}
-.chat-file-icon{font-family:var(--font-mono);font-size:.55rem;font-weight:700;background:rgba(255,255,255,.25);padding:.15rem .35rem;border-radius:4px;text-transform:uppercase;flex-shrink:0}
-.chat-file-dl{font-size:.85rem;flex-shrink:0;opacity:.8}
+.wa-file-body{flex:1;min-width:0}
+.wa-file-name{font-size:.76rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.wa-file-meta{font-size:.65rem;opacity:.7;font-family:var(--font-mono);display:flex;align-items:center;gap:.3rem;margin-top:.15rem}
+.wa-file-icon{font-family:var(--font-mono);font-size:.55rem;font-weight:700;background:rgba(255,255,255,.25);padding:.15rem .35rem;border-radius:4px;text-transform:uppercase;flex-shrink:0}
+.wa-file-dl{font-size:.85rem;flex-shrink:0;opacity:.8}
 .chat-file.loading{opacity:.5;pointer-events:none}
-.chat-file-img-wrap{position:relative;width:100px;height:100px;flex-shrink:0}
-.chat-file-img-overlay{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.7rem}
-.chat-bubble-actions{margin-top:.4rem;display:flex;gap:.3rem}
-.chat-bubble-actions .btn{padding:.3rem .6rem;font-size:.72rem;width:auto;border-radius:6px}
+.wa-file-img-wrap{position:relative;width:100px;height:100px;flex-shrink:0}
+.wa-file-img-overlay{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.7rem}
+.wa-bubble-actions{margin-top:.4rem;display:flex;gap:.3rem}
+.wa-bubble-actions .btn{padding:.3rem .6rem;font-size:.72rem;width:auto;border-radius:6px}
 /* Reply bar */
 .reply-bar{background:var(--surface);padding:.6rem .75rem;border-top:1px solid var(--border);display:flex;gap:.5rem;align-items:center}
 .reply-bar input{flex:1;padding:.6rem .8rem;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:20px;font-family:var(--font-body);font-size:.88rem}
@@ -106,6 +106,52 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .loading{text-align:center;padding:2rem;color:var(--text-dim);font-family:var(--font-mono)}
 .empty{text-align:center;padding:2rem;color:var(--text-dim)}
+/* WhatsApp-style admin dashboard */
+.wa-header{background:var(--surface);padding:.6rem 1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.wa-header-left{display:flex;align-items:center;gap:.6rem}
+.wa-avatar{width:38px;height:38px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.9rem;flex-shrink:0}
+.wa-header-info{display:flex;flex-direction:column}
+.wa-header-name{font-weight:600;font-size:.9rem;line-height:1.2}
+.wa-header-status{font-size:.7rem;color:var(--text-dim);line-height:1.2}
+.wa-chat-bg{background:var(--chat-bg);flex:1;overflow-y:auto;padding:.8rem;display:flex;flex-direction:column;gap:.4rem;min-height:0}
+.wa-bubble{max-width:85%;padding:.5rem .75rem;border-radius:8px;font-size:.85rem;word-wrap:break-word;white-space:pre-wrap;position:relative;animation:fadeIn .15s ease;line-height:1.4}
+.wa-bubble.user{align-self:flex-start;background:#202c33;border-top-left-radius:0;color:#e9edef}
+.wa-bubble.admin{align-self:flex-end;background:#005c4b;border-top-right-radius:0;color:#e9edef}
+.wa-bubble-name{font-size:.68rem;font-weight:600;margin-bottom:.15rem;color:#8696a0}
+.wa-bubble-time{font-size:.6rem;opacity:.6;margin-top:.2rem;text-align:right;font-family:var(--font-mono);color:#8696a0}
+.wa-bubble-files{margin-top:.35rem;display:flex;flex-direction:column;gap:.3rem}
+.wa-file{display:flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.08);border-radius:8px;padding:.5rem .6rem;cursor:pointer;transition:.15s;max-width:260px}
+.wa-file:hover{background:rgba(255,255,255,.15)}
+.wa-file:active{transform:scale(.97)}
+.wa-file.loading{opacity:.5;pointer-events:none}
+.wa-file-img-wrap{position:relative;width:120px;height:120px;flex-shrink:0;border-radius:8px;overflow:hidden}
+.wa-file-img-wrap img{width:100%;height:100%;object-fit:cover}
+.wa-file-img-overlay{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.65);color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:.75rem}
+.wa-file-icon{font-family:var(--font-mono);font-size:.55rem;font-weight:700;background:rgba(255,255,255,.2);padding:.2rem .4rem;border-radius:4px;text-transform:uppercase;flex-shrink:0}
+.wa-file-body{flex:1;min-width:0}
+.wa-file-name{font-size:.76rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;color:#e9edef}
+.wa-file-meta{font-size:.62rem;color:#8696a0;font-family:var(--font-mono);margin-top:.1rem}
+.wa-file-dl{font-size:1rem;flex-shrink:0;opacity:.7;color:#e9edef}
+.wa-bubble-actions{margin-top:.3rem;display:flex;gap:.3rem}
+.wa-bubble-actions button,.wa-bubble-actions a{padding:.25rem .55rem;font-size:.65rem;border-radius:6px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#e9edef;cursor:pointer;text-decoration:none;transition:.15s}
+.wa-bubble-actions button:hover,.wa-bubble-actions a:hover{background:rgba(255,255,255,.15)}
+.wa-input-bar{background:var(--surface);padding:.5rem .75rem;border-top:1px solid var(--border);display:flex;gap:.5rem;align-items:center;flex-shrink:0}
+.wa-input-bar input{flex:1;padding:.55rem .9rem;background:#2a3942;color:#e9edef;border:none;border-radius:8px;font-family:var(--font-body);font-size:.85rem;outline:none}
+.wa-input-bar input::placeholder{color:#8696a0}
+.wa-input-bar input:focus{background:#313d45}
+.wa-send-btn{background:#00a884;color:#fff;border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+.wa-send-btn:hover{background:#06cf9c}
+.wa-send-btn:disabled{opacity:.4}
+.wa-refresh{background:none;border:none;color:#8696a0;cursor:pointer;font-size:1rem;padding:.3rem}
+.wa-admin-page{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.wa-admin-body{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.wa-date-sep{text-align:center;margin:.5rem 0;font-size:.65rem;color:#8696a0;background:rgba(0,0,0,.2);padding:.2rem .6rem;border-radius:8px;align-self:center}
+.wa-settings-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center}
+.wa-settings-modal.show{display:flex}
+.wa-settings-box{background:var(--surface);border-radius:14px;padding:1.5rem;max-width:400px;width:90%;max-height:80vh;overflow-y:auto}
+.wa-settings-box h2{margin-bottom:1rem;font-size:1.1rem}
+.wa-close-btn{background:none;border:none;color:var(--text-dim);font-size:1.3rem;cursor:pointer;position:absolute;top:1rem;right:1rem}
+@media(max-width:520px){.wa-bubble{max-width:92%}.wa-header-name{font-size:.85rem}.wa-file-img-wrap{width:100px;height:100px}}
 /* Admin nav with online status */
 .admin-nav{position:relative}
 @media(max-width:520px){.stats{grid-template-columns:repeat(3,1fr);gap:.4rem}.stat{padding:.4rem}.stat-num{font-size:1rem}.stat-label{font-size:.6rem}.hero h1{font-size:1.2rem}.hero p{font-size:.8rem}.hero{margin-bottom:.8rem}.chat-area{max-height:90vh}.chat-bubble{max-width:88%}}
@@ -150,48 +196,61 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 <p style="font-size:.78rem;color:var(--text-dim);text-align:center;margin-top:.8rem">Default: <code style="font-family:var(--font-mono);color:var(--accent-2)">admin123</code></p>
 </div></div></div>
 
-<!-- ADMIN DASHBOARD -->
+<!-- ADMIN DASHBOARD - WhatsApp Style -->
 <div class="page" id="page-admin">
-<nav class="nav admin-nav">
-<div style="display:flex;align-items:center;gap:.6rem">
-<div class="nav-brand">QR<span>::</span>GroupJoin</div>
-<div class="status-bar"><div class="status-dot online" id="admin-status-dot"></div><span style="color:var(--success);font-size:.78rem">Admin Online</span></div>
+<div class="wa-admin-page">
+<div class="wa-header">
+<div class="wa-header-left">
+<div class="wa-avatar">A</div>
+<div class="wa-header-info">
+<div class="wa-header-name">QR Group Messages</div>
+<div class="wa-header-status" id="chat-last-update">Loading...</div>
 </div>
-<button class="nav-btn" onclick="adminLogout()">Logout</button>
-</nav>
-<div class="container">
-<div class="stats"><div class="stat"><div class="stat-num" id="stat-messages">0</div><div class="stat-label">Total</div></div><div class="stat"><div class="stat-num" id="stat-today">0</div><div class="stat-label">Aaj</div></div><div class="stat"><div class="stat-num" id="stat-files">0</div><div class="stat-label">Files</div></div></div>
-<div class="tabs"><button class="tab active" onclick="switchTab(event,'messages')">Messages <span class="notif-badge" id="notif-badge">!</span></button><button class="tab" onclick="switchTab(event,'settings')">Settings</button></div>
-
-<!-- Messages Tab - Chat Layout -->
-<div class="tab-panel active" id="tab-messages">
-<div class="chat-area">
-<div class="chat-header">
-<div class="chat-header-info">
-<div><div class="chat-header-name">All Messages</div><div class="chat-header-status" id="chat-last-update">Loading...</div></div>
 </div>
-<button class="nav-btn" onclick="loadMessages()" style="padding:.3rem .6rem;font-size:.72rem">Refresh</button>
+<div style="display:flex;gap:.4rem;align-items:center">
+<span class="status-bar" style="font-size:.72rem"><div class="status-dot online"></div>Online</span>
+<button class="wa-refresh" onclick="loadMessages()" title="Refresh">&#8635;</button>
+<button class="wa-refresh" onclick="showSettings()" title="Settings">&#9881;</button>
+<button class="wa-refresh" onclick="adminLogout()" title="Logout">&#10148;</button>
 </div>
-<div class="chat-messages" id="messages-list"><div class="loading">Messages load ho rahe hain...</div></div>
-<div class="reply-bar">
-<input type="text" id="reply-input" placeholder="Reply bhejein... (sab ko)" onkeydown="if(event.key==='Enter')sendReply()">
-<button class="reply-send" id="reply-btn" onclick="sendReply()">&#8593;</button>
+</div>
+<div class="wa-admin-body">
+<div class="wa-chat-bg" id="messages-list"><div class="loading">Messages load ho rahe hain...</div></div>
+<div class="wa-input-bar">
+<input type="text" id="reply-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendReply()">
+<button class="wa-send-btn" id="reply-btn" onclick="sendReply()">&#8593;</button>
+</div>
 </div>
 </div>
 </div>
 
-<!-- Settings Tab -->
-<div class="tab-panel" id="tab-settings">
-<div class="card"><div class="card-label">Configuration</div><h2>Settings</h2>
-<div class="form-group" style="margin-top:.8rem"><label>WhatsApp Number (optional)</label><input type="text" id="set-admin-number" placeholder="919876543210"></div>
-<button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
-<div id="settings-alert" class="alert" style="margin-top:.8rem"></div></div>
-<div class="card"><div class="card-label">Security</div><h2>Password change</h2>
-<div class="form-group" style="margin-top:.8rem"><label>Naya password</label><input type="password" id="set-new-pass" placeholder="Naya password"></div>
-<button class="btn btn-danger" onclick="changePassword()">Password update</button>
-<div id="pass-alert" class="alert" style="margin-top:.8rem"></div></div>
+<!-- Settings Modal -->
+<div class="wa-settings-modal" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+<div class="wa-settings-box" style="position:relative">
+<button class="wa-close-btn" onclick="closeSettings()">&#10005;</button>
+<h2>Settings</h2>
+<div class="form-group" style="margin-top:.8rem">
+<label>WhatsApp Number (optional)</label>
+<input type="text" id="set-admin-number" placeholder="919876543210">
 </div>
-</div></div></div>
+<button class="btn btn-primary" onclick="saveSettings()">Save</button>
+<div id="settings-alert" class="alert" style="margin-top:.8rem"></div>
+<hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+<h2>Password Change</h2>
+<div class="form-group" style="margin-top:.8rem">
+<label>Naya password</label>
+<input type="password" id="set-new-pass" placeholder="Naya password">
+</div>
+<button class="btn btn-danger" onclick="changePassword()">Update Password</button>
+<div id="pass-alert" class="alert" style="margin-top:.8rem"></div>
+<hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+<div style="display:flex;justify-content:space-around;text-align:center">
+<div><div style="font-size:1.3rem;font-weight:700;color:var(--accent)" id="stat-messages">0</div><div style="font-size:.65rem;color:var(--text-dim)">Total</div></div>
+<div><div style="font-size:1.3rem;font-weight:700;color:var(--accent)" id="stat-today">0</div><div style="font-size:.65rem;color:var(--text-dim)">Aaj</div></div>
+<div><div style="font-size:1.3rem;font-weight:700;color:var(--accent)" id="stat-files">0</div><div style="font-size:.65rem;color:var(--text-dim)">Files</div></div>
+</div>
+</div>
+</div>
 
 <script>
 var GH_OWNER='rahuleducationvideos-commits';var GH_REPO='qr-group-app';var STORE_KEY='qrGroupApp_v5';
@@ -331,11 +390,11 @@ var time=d.toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'});
 var dateStr=d.toLocaleDateString('hi-IN');
 var isReply=m.type==='reply';
 var bubbleClass=isReply?'admin':'user';
-var nameHtml=isReply?'<div class="chat-bubble-name">Admin Reply</div>':'<div class="chat-bubble-name">'+escapeHtml(m.name)+'</div>';
+var nameHtml=isReply?'<div class="wa-bubble-name">Admin Reply</div>':'<div class="wa-bubble-name">'+escapeHtml(m.name)+'</div>';
 var bodyHtml=m.text?'<div>'+escapeHtml(m.text)+'</div>':'';
 var filesHtml='';
 if(m.files&&m.files.length>0){
-filesHtml='<div class="chat-bubble-files">';
+filesHtml='<div class="wa-bubble-files">';
 m.files.forEach(function(f){
 var ext=getFileExt(f.name);
 var sanitized=f.name.replace(/[^a-zA-Z0-9.]/g,'_');
@@ -345,22 +404,22 @@ if(m._fileMap){for(var k in m._fileMap){if(k.indexOf(prefix)===0&&k.indexOf(sani
 if(!dlUrl){dlUrl='https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/main/messages/files/'+prefix+'_'+sanitized}
 var fName=f.name.length>22?f.name.substring(0,20)+'..':f.name;
 if(f.type&&f.type.indexOf('image')===0){
-filesHtml+='<div class="chat-file" onclick="downloadFile(this,\''+dlUrl+'\',\''+escapeHtml(f.name).replace(/'/g,'')+'\')"><div class="chat-file-img-wrap"><img src="'+dlUrl+'" alt="'+escapeHtml(f.name)+'" onerror="this.parentNode.style.display=\'none\'"><div class="chat-file-img-overlay">&#8595;</div></div><div class="chat-file-body"><span class="chat-file-name">'+escapeHtml(fName)+'</span><span class="chat-file-meta"><span class="chat-file-icon">'+ext+'</span>'+formatSize(f.size)+'</span></div></div>';
+filesHtml+='<div class="wa-file" onclick="downloadFile(this,\''+dlUrl+'\',\''+escapeHtml(f.name).replace(/'/g,'')+'\')"><div class="wa-file-img-wrap"><img src="'+dlUrl+'" alt="'+escapeHtml(f.name)+'" onerror="this.parentNode.style.display=\'none\'"><div class="wa-file-img-overlay">&#8595;</div></div><div class="wa-file-body"><span class="wa-file-name">'+escapeHtml(fName)+'</span><span class="wa-file-meta"><span class="wa-file-icon">'+ext+'</span>'+formatSize(f.size)+'</span></div></div>';
 }else{
-filesHtml+='<div class="chat-file" onclick="downloadFile(this,\''+dlUrl+'\',\''+escapeHtml(f.name).replace(/'/g,'')+'\')"><span class="chat-file-icon">'+ext+'</span><div class="chat-file-body"><span class="chat-file-name">'+escapeHtml(fName)+'</span><span class="chat-file-meta">'+formatSize(f.size)+'</span></div><span class="chat-file-dl">&#8595;</span></div>';
+filesHtml+='<div class="wa-file" onclick="downloadFile(this,\''+dlUrl+'\',\''+escapeHtml(f.name).replace(/'/g,'')+'\')"><span class="wa-file-icon">'+ext+'</span><div class="wa-file-body"><span class="wa-file-name">'+escapeHtml(fName)+'</span><span class="wa-file-meta">'+formatSize(f.size)+'</span></div><span class="wa-file-dl">&#8595;</span></div>';
 }
 });
 filesHtml+='</div>';
 }
 var actions='';
 if(!isReply){
-actions='<div class="chat-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button>';
+actions='<div class="wa-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button>';
 if(store.adminNumber){actions+='<a class="btn btn-success" target="_blank" href="https://wa.me/'+store.adminNumber+'?text='+encodeURIComponent('Reply to '+m.name)+'" style="font-size:.68rem;padding:.2rem .5rem">WhatsApp</a>'}
 actions+='</div>';
 }else{
-actions='<div class="chat-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button></div>';
+actions='<div class="wa-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button></div>';
 }
-return '<div class="chat-bubble '+bubbleClass+'">'+nameHtml+bodyHtml+filesHtml+'<div class="chat-bubble-time">'+dateStr+' '+time+'</div>'+actions+'</div>';
+return '<div class="wa-bubble '+bubbleClass+'">'+nameHtml+bodyHtml+filesHtml+'<div class="wa-bubble-time">'+time+'</div>'+actions+'</div>';
 }).join('');
 container.scrollTop=container.scrollHeight;
 var lu=document.getElementById('chat-last-update');
@@ -427,6 +486,8 @@ setTimeout(function(){a.classList.remove('show')},4000);
 }).catch(function(){a.className='alert alert-error show';a.textContent='config.json fetch nahi hua'})
 }
 function switchTab(e,name){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});e.target.classList.add('active');document.getElementById('tab-'+name).classList.add('active');if(name==='messages')loadMessages()}
+function showSettings(){document.getElementById('settings-modal').classList.add('show')}
+function closeSettings(){document.getElementById('settings-modal').classList.remove('show')}
 
 /* Download file on click - fetch blob then download (works cross-origin, supports print) */
 function downloadFile(el,url,filename){
