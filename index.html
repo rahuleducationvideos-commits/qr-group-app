@@ -5,30 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QR Group Join — Private Messaging</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root {
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --surface-2: #334155;
-  --border: rgba(148,163,184,0.15);
-  --text: #f1f5f9;
-  --text-dim: #94a3b8;
-  --accent: #0891b2;
-  --accent-dim: rgba(8,145,178,0.15);
-  --accent-2: #d4a73a;
-  --success: #059669;
-  --danger: #dc2626;
-  --radius: 14px;
-  --font-body: 'DM Sans', system-ui, sans-serif;
-  --font-mono: 'Fira Code', monospace;
+  --bg: #0f172a; --surface: #1e293b; --surface-2: #334155;
+  --border: rgba(148,163,184,0.15); --text: #f1f5f9; --text-dim: #94a3b8;
+  --accent: #0891b2; --accent-dim: rgba(8,145,178,0.15); --accent-2: #d4a73a;
+  --success: #059669; --danger: #dc2626; --radius: 14px;
+  --font-body: 'DM Sans', system-ui, sans-serif; --font-mono: 'Fira Code', monospace;
 }
 @media (prefers-color-scheme: light) {
   :root { --bg: #f8fafc; --surface: #ffffff; --surface-2: #f1f5f9; --border: rgba(15,23,42,0.1); --text: #0f172a; --text-dim: #475569; --accent-dim: rgba(8,145,178,0.1); }
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
-.page { display:none; min-height:100vh; }
-.page.active { display:block; }
+.page { display:none; min-height:100vh; } .page.active { display:block; }
 .nav { display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); position: sticky; top:0; background:var(--surface); z-index:50; }
 .nav-brand { font-family: var(--font-mono); font-weight:600; font-size:1rem; color: var(--accent); letter-spacing:-0.02em; }
 .nav-brand span { color: var(--text-dim); }
@@ -40,12 +31,12 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .hero p { color: var(--text-dim); font-size: 1rem; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem; margin-bottom: 1.5rem; }
 .card-label { font-family: var(--font-mono); font-size:0.75rem; font-weight:600; color: var(--accent); text-transform: uppercase; letter-spacing:0.08em; margin-bottom: 0.75rem; }
-.card h2 { font-size: 1.25rem; margin-bottom: 0.5rem; }
-.card p { color: var(--text-dim); font-size: 0.92rem; }
+.card h2 { font-size: 1.25rem; margin-bottom: 0.5rem; } .card p { color: var(--text-dim); font-size: 0.92rem; }
+.qr-wrap { display:flex; justify-content:center; padding:1.5rem; background:#fff; border-radius: var(--radius); margin: 1rem 0; }
+.qr-wrap canvas, .qr-wrap img { border-radius: 8px; }
 .btn { display:inline-flex; align-items:center; justify-content:center; gap:0.5rem; width:100%; padding: 0.9rem 1.5rem; font-family: var(--font-body); font-size: 1rem; font-weight:600; border:none; border-radius: 10px; cursor:pointer; text-decoration:none; transition: all 0.2s; color:#fff; }
-.btn-primary { background: var(--accent); }
-.btn-primary:hover { background: #0e7490; }
-.btn-success { background: var(--success); }
+.btn-primary { background: var(--accent); } .btn-primary:hover { background: #0e7490; }
+.btn-success { background: var(--success); } .btn-success:hover { background: #047857; }
 .btn-danger { background: var(--danger); }
 .btn-outline { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
 .form-group { margin-bottom: 1.1rem; }
@@ -53,8 +44,19 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .form-group input, .form-group textarea { width:100%; padding: 0.75rem 0.9rem; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; }
 .form-group input:focus, .form-group textarea:focus { outline:none; border-color: var(--accent); }
 .form-group textarea { resize: vertical; min-height: 100px; }
-.alert { padding: 0.75rem 1rem; border-radius: 8px; font-size:0.88rem; margin-bottom: 1rem; display:none; }
-.alert.show { display:block; }
+.file-upload { position: relative; display: flex; flex-direction: column; gap: 0.5rem; }
+.file-drop { border: 2px dashed var(--border); border-radius: 10px; padding: 1.5rem 1rem; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg); }
+.file-drop:hover, .file-drop.dragover { border-color: var(--accent); background: var(--accent-dim); }
+.file-drop-icon { font-family: var(--font-mono); font-size: 1.5rem; color: var(--text-dim); margin-bottom: 0.4rem; }
+.file-drop-text { font-size: 0.88rem; color: var(--text-dim); } .file-drop-text strong { color: var(--accent); }
+.file-input { display:none; }
+.file-list { display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem; }
+.file-chip { display:flex; align-items:center; gap:0.6rem; background: var(--surface-2); border:1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.82rem; }
+.file-chip-icon { font-family: var(--font-mono); font-size:0.7rem; font-weight:600; color:#fff; background: var(--accent); padding:0.15rem 0.4rem; border-radius: 4px; text-transform: uppercase; flex-shrink:0; }
+.file-chip-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color: var(--text); }
+.file-chip-size { font-family: var(--font-mono); font-size:0.72rem; color: var(--text-dim); flex-shrink:0; }
+.file-chip-remove { background:none; border:none; color: var(--danger); cursor:pointer; font-size:1.1rem; padding:0; margin-left:0.3rem; line-height:1; }
+.alert { padding: 0.75rem 1rem; border-radius: 8px; font-size:0.88rem; margin-bottom: 1rem; display:none; } .alert.show { display:block; }
 .alert-success { background: rgba(5,150,105,0.15); color:#34d399; border:1px solid rgba(5,150,105,0.3); }
 .alert-error { background: rgba(220,38,38,0.15); color:#f87171; border:1px solid rgba(220,38,38,0.3); }
 .stats { display:grid; grid-template-columns: repeat(3,1fr); gap:0.75rem; margin-bottom: 1.5rem; }
@@ -66,32 +68,58 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .msg-name { font-weight:700; font-size: 1rem; }
 .msg-time { font-family: var(--font-mono); font-size:0.75rem; color: var(--text-dim); white-space: nowrap; }
 .msg-body { color: var(--text); font-size: 0.92rem; margin-bottom: 0.75rem; word-wrap: break-word; white-space: pre-wrap; }
+.msg-attachments { display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem; }
+.attachment { display:flex; align-items:center; gap:0.5rem; background: var(--surface-2); border:1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.65rem; text-decoration:none; color: var(--text); font-size: 0.82rem; transition: all 0.2s; }
+.attachment:hover { border-color: var(--accent); color: var(--accent); }
+.attachment-icon { font-family: var(--font-mono); font-size:0.65rem; font-weight:600; color:#fff; background: var(--accent); padding:0.12rem 0.35rem; border-radius: 4px; text-transform: uppercase; }
+.attachment-preview { max-width: 80px; max-height:80px; border-radius:6px; border:1px solid var(--border); cursor:pointer; }
 .msg-actions { display:flex; gap:0.5rem; }
 .tabs { display:flex; gap:0.5rem; margin-bottom:1.5rem; border-bottom:1px solid var(--border); }
 .tab { padding: 0.6rem 1.1rem; background:none; border:none; color: var(--text-dim); font-family:var(--font-mono); font-size:0.85rem; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; }
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.tab-panel { display:none; }
-.tab-panel.active { display:block; }
-@media (max-width: 520px) { .stats { grid-template-columns: 1fr; } .hero h1 { font-size: 1.6rem; } }
+.tab-panel { display:none; } .tab-panel.active { display:block; }
+@media (max-width: 520px) { .stats { grid-template-columns: 1fr; } .hero h1 { font-size: 1.6rem; } .msg-actions { flex-direction:column; } }
 </style>
 </head>
 <body>
 <div class="page active" id="page-public">
-  <nav class="nav">
-    <div class="nav-brand">QR<span>::</span>GroupJoin</div>
-    <button class="nav-btn" onclick="showPage('page-admin-login')">Admin</button>
-  </nav>
+  <nav class="nav"><div class="nav-brand">QR<span>::</span>GroupJoin</div><button class="nav-btn" onclick="showPage('page-admin-login')">Admin</button></nav>
   <div class="container">
-    <div class="hero"><h1>Message Bhejein</h1><p>QR scan karke aap seedha message form par hain. Admin ko private message bhejein.</p></div>
+    <div class="hero"><h1>Group me aaiye</h1><p>QR code scan karein ya niche button se join karein. Private message aur file bhi bhej sakte hain.</p></div>
+    <div class="card">
+      <div class="card-label">Step 1 — Scan QR</div>
+      <h2>QR Code</h2>
+      <p>Camera se scan karein, yahi page khulega jahan se aap group join kar sakte hain.</p>
+      <div class="qr-wrap" id="qr-public"></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Step 2 — Join</div>
+      <h2>WhatsApp Group</h2>
+      <p>Niche button dabate hi WhatsApp group me redirect ho jayenge.</p>
+      <div style="height:1rem"></div>
+      <a href="#" id="join-link" class="btn btn-success" target="_blank" rel="noopener">Join WhatsApp Group</a>
+      <div id="join-alert" class="alert alert-error" style="margin-top:1rem"></div>
+    </div>
     <div class="card" id="message">
-      <div class="card-label">Private Message</div>
-      <h2>Admin ko message bhejein</h2>
-      <p>Aapka message sirf admin ke dashboard me jayega — group me nahi.</p>
+      <div class="card-label">Step 3 — Private Message + File</div>
+      <h2>Admin ko private message bhejein</h2>
+      <p>Aapka message aur files sirf admin ke dashboard me jayenge — group me nahi.</p>
       <div id="msg-alert" class="alert"></div>
       <form id="msg-form" onsubmit="return sendPrivateMessage(event)">
         <div class="form-group"><label>Aapka naam</label><input type="text" id="msg-name" placeholder="Naam likhein" required></div>
-        <div class="form-group"><label>Message</label><textarea id="msg-text" placeholder="Apna message yahan likhein..." required></textarea></div>
-        <button type="submit" class="btn btn-primary">Message Bhejein</button>
+        <div class="form-group"><label>Message</label><textarea id="msg-text" placeholder="Apna message yahan likhein..."></textarea></div>
+        <div class="form-group">
+          <label>File attach karein (Photo, PDF, Document — optional)</label>
+          <div class="file-upload">
+            <div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()">
+              <div class="file-drop-icon">[ + ]</div>
+              <div class="file-drop-text"><strong>Click karein ya drag-drop karein</strong><br>Photo, PDF, Word, Excel, ya koi bhi file</div>
+            </div>
+            <input type="file" id="file-input" class="file-input" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip">
+            <div class="file-list" id="file-list"></div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Message + File Bhejein</button>
       </form>
     </div>
   </div>
@@ -102,10 +130,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
     <div class="hero"><h1>Admin Login</h1><p>Dashboard access ke liye password daalein.</p></div>
     <div class="card">
       <div id="login-alert" class="alert"></div>
-      <form onsubmit="return adminLogin(event)">
-        <div class="form-group"><label>Password</label><input type="password" id="admin-pass" placeholder="Admin password" required autofocus></div>
-        <button type="submit" class="btn btn-primary">Login</button>
-      </form>
+      <form onsubmit="return adminLogin(event)"><div class="form-group"><label>Password</label><input type="password" id="admin-pass" placeholder="Admin password" required autofocus></div><button type="submit" class="btn btn-primary">Login</button></form>
       <p style="font-size:0.8rem; color:var(--text-dim); text-align:center; margin-top:1rem;">Default: <code style="font-family:var(--font-mono); color:var(--accent-2);">admin123</code></p>
     </div>
   </div>
@@ -113,89 +138,160 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 <div class="page" id="page-admin">
   <nav class="nav"><div class="nav-brand">QR<span>::</span>GroupJoin <span style="color:var(--success)">[ADMIN]</span></div><button class="nav-btn" onclick="adminLogout()">Logout</button></nav>
   <div class="container">
-    <div class="hero"><h1>Dashboard</h1><p>Sab messages yahan dikhein.</p></div>
+    <div class="hero"><h1>Dashboard</h1><p>Sab messages, files, aur join logs yahan dikhein.</p></div>
     <div class="stats">
       <div class="stat"><div class="stat-num" id="stat-messages">0</div><div class="stat-label">Messages</div></div>
+      <div class="stat"><div class="stat-num" id="stat-files">0</div><div class="stat-label">Files</div></div>
       <div class="stat"><div class="stat-num" id="stat-today">0</div><div class="stat-label">Aaj</div></div>
     </div>
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab(event,'messages')">Messages</button>
-      <button class="tab" onclick="switchTab(event,'settings')">Settings</button>
-    </div>
-    <div class="tab-panel active" id="tab-messages">
-      <div id="messages-list"></div>
-    </div>
+    <div class="tabs"><button class="tab active" onclick="switchTab(event,'messages')">Messages</button><button class="tab" onclick="switchTab(event,'joins')">Join Logs</button><button class="tab" onclick="switchTab(event,'settings')">Settings</button></div>
+    <div class="tab-panel active" id="tab-messages"><div id="messages-list"></div><button class="btn btn-outline" onclick="clearAllMessages()" style="margin-top:1rem">Saare messages delete karein</button></div>
+    <div class="tab-panel" id="tab-joins"><div class="card" style="padding:0;overflow:hidden;"><div style="overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);"><table><thead><tr><th>#</th><th>Visitor</th><th>Time</th></tr></thead><tbody id="joins-tbody"></tbody></table></div></div></div>
     <div class="tab-panel" id="tab-settings">
       <div class="card">
-        <div class="card-label">Configuration</div>
-        <h2>Settings</h2>
-        <div class="form-group" style="margin-top:1rem"><label>Admin WhatsApp Number</label><input type="text" id="set-admin-number" placeholder="919876543210"></div>
-        <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+        <div class="card-label">Configuration</div><h2>Settings</h2>
+        <div class="form-group" style="margin-top:1rem"><label>WhatsApp Group Invite Link</label><input type="text" id="set-group-link" placeholder="https://chat.whatsapp.com/..."></div>
+        <div class="form-group"><label>Admin WhatsApp Number (with country code)</label><input type="text" id="set-admin-number" placeholder="919876543210"></div>
+        <div class="form-group"><label>Site URL (for QR code)</label><input type="text" id="set-site-url" placeholder="https://your-site.com"></div>
+        <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+        <div id="settings-alert" class="alert" style="margin-top:1rem"></div>
       </div>
       <div class="card">
-        <div class="card-label">Security</div>
-        <h2>Password change</h2>
+        <div class="card-label">QR Code Download</div><h2>QR Code Image Download</h2>
+        <p>QR code <strong>#message</strong> link encode karega — scan karte hi seedha message form khulega.</p>
+        <div style="height:1rem"></div>
+        <div class="qr-wrap" id="qr-admin-preview" style="margin:0 auto 1rem; width:fit-content"></div>
+        <button class="btn btn-success" onclick="downloadQR()">QR Code Image Download</button>
+        <div id="qr-download-alert" class="alert" style="margin-top:1rem"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Security</div><h2>Password change</h2>
         <div class="form-group" style="margin-top:1rem"><label>Naya password</label><input type="password" id="set-new-pass" placeholder="Naya password"></div>
-        <button class="btn btn-danger" onclick="changePassword()">Update</button>
+        <button class="btn btn-danger" onclick="changePassword()">Password update</button>
+        <div id="pass-alert" class="alert" style="margin-top:1rem"></div>
       </div>
     </div>
   </div>
 </div>
 <script>
-const STORE_KEY = 'qrGroupApp_v3';
+const STORE_KEY = 'qrGroupApp_v2';
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 function getStore() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch(e) { return {}; } }
-function saveStore(s) { try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch(e) { alert('Storage full!'); return false; } return true; }
-function defaults() { return { password: 'admin123', adminNumber: '', messages: [] }; }
+function saveStore(s) { try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch(e) { alert('Storage full! Files bahut bade hain. Chhote files try karein ya purane messages delete karein.'); return false; } return true; }
+function defaults() { return { password: 'admin123', groupLink: '', adminNumber: '', siteUrl: 'https://rahuleducationvideos-commits.github.io/qr-group-app/', messages: [], joins: [] }; }
 function ensureStore() { let s = getStore(); const d = defaults(); for (const k in d) if (s[k] === undefined) s[k] = d[k]; saveStore(s); return s; }
-let store = ensureStore();
-let isAdmin = false;
-function showPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); if (id === 'page-admin') renderAdmin(); }
-function sendPrivateMessage(e) {
-  e.preventDefault();
+let store = ensureStore(); let isAdmin = false; let pendingFiles = [];
+function showPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); if (id === 'page-admin') renderAdmin(); if (id === 'page-public') renderPublic(); }
+function makeQR(targetId, text) { const el = document.getElementById(targetId); el.innerHTML = ''; new QRCode(el, { text: text, width: 200, height: 200, colorDark: '#0f172a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H }); }
+function renderPublic() {
   store = ensureStore();
-  const name = document.getElementById('msg-name').value.trim();
-  const text = document.getElementById('msg-text').value.trim();
-  const msg = { id: Date.now(), name, text, time: new Date().toISOString() };
-  store.messages.unshift(msg);
-  saveStore(store);
-  const a = document.getElementById('msg-alert');
-  a.className = 'alert alert-success show';
-  a.textContent = 'Message save ho gaya!';
-  if (store.adminNumber) {
-    const waText = encodeURIComponent('Private message from ' + name + ':\n' + text);
-    setTimeout(function() { window.open('https://wa.me/' + store.adminNumber + '?text=' + waText, '_blank'); }, 300);
+  const baseUrl = store.siteUrl || window.location.href.split('#')[0];
+  const qrUrl = baseUrl.split('#')[0] + '#message';
+  makeQR('qr-public', qrUrl);
+  if (window.location.hash === '#message') { setTimeout(function() { const msgEl = document.getElementById('message'); if (msgEl) msgEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300); }
+  const joinLink = document.getElementById('join-link'); const joinAlert = document.getElementById('join-alert');
+  if (store.groupLink) { joinLink.href = store.groupLink; joinLink.style.display = ''; joinAlert.classList.remove('show'); logJoin(); }
+  else { joinLink.href = '#'; joinLink.style.display = 'none'; joinAlert.textContent = 'Admin ne abhi tak group link set nahi kiya.'; joinAlert.classList.add('show'); }
+}
+let joinLogged = false;
+function logJoin() { if (joinLogged) return; joinLogged = true; store.joins.push({ id: Date.now(), time: new Date().toISOString(), referrer: document.referrer || 'direct' }); saveStore(store); }
+function initFileUpload() {
+  const drop = document.getElementById('file-drop'); const input = document.getElementById('file-input');
+  input.addEventListener('change', function(e) { handleFiles(e.target.files); input.value = ''; });
+  drop.addEventListener('dragover', function(e) { e.preventDefault(); drop.classList.add('dragover'); });
+  drop.addEventListener('dragleave', function(e) { drop.classList.remove('dragover'); });
+  drop.addEventListener('drop', function(e) { e.preventDefault(); drop.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+}
+function handleFiles(fileList) {
+  const alertEl = document.getElementById('msg-alert');
+  for (const file of fileList) {
+    if (file.size > MAX_FILE_SIZE) { alertEl.className = 'alert alert-error show'; alertEl.textContent = 'File "' + file.name + '" 5MB se bada hai.'; setTimeout(function(){ alertEl.classList.remove('show'); }, 4000); continue; }
+    const reader = new FileReader();
+    reader.onload = function(e) { pendingFiles.push({ name: file.name, size: file.size, type: file.type || 'unknown', data: e.target.result }); renderFileList(); };
+    reader.readAsDataURL(file);
   }
-  document.getElementById('msg-text').value = '';
-  setTimeout(function() { a.classList.remove('show'); }, 4000);
-  return false;
 }
-function adminLogin(e) {
-  e.preventDefault();
-  store = ensureStore();
-  if (document.getElementById('admin-pass').value === store.password) { isAdmin = true; showPage('page-admin'); }
-  else { const a = document.getElementById('login-alert'); a.className = 'alert alert-error show'; a.textContent = 'Galat password!'; setTimeout(function(){ a.classList.remove('show'); }, 3000); }
-  return false;
+function renderFileList() { const list = document.getElementById('file-list'); if (pendingFiles.length === 0) { list.innerHTML = ''; return; } list.innerHTML = pendingFiles.map(function(f, i) { return '<div class="file-chip"><span class="file-chip-icon">' + getFileExt(f.name) + '</span><span class="file-chip-name">' + escapeHtml(f.name) + '</span><span class="file-chip-size">' + formatSize(f.size) + '</span><button class="file-chip-remove" onclick="removeFile(' + i + ')">&times;</button></div>'; }).join(''); }
+function removeFile(i) { pendingFiles.splice(i, 1); renderFileList(); }
+function getFileExt(name) { const parts = name.split('.'); return parts.length > 1 ? parts.pop().substring(0,4).toUpperCase() : 'FILE'; }
+function formatSize(bytes) { if (bytes < 1024) return bytes + ' B'; if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB'; return (bytes/1048576).toFixed(1) + ' MB'; }
+function sendPrivateMessage(e) {
+  e.preventDefault(); store = ensureStore();
+  const name = document.getElementById('msg-name').value.trim(); const text = document.getElementById('msg-text').value.trim();
+  if (!text && pendingFiles.length === 0) { const a = document.getElementById('msg-alert'); a.className = 'alert alert-error show'; a.textContent = 'Kam se kam message likhein ya file attach karein.'; setTimeout(function(){ a.classList.remove('show'); }, 3000); return false; }
+  const msg = { id: Date.now(), name: name, text: text, files: pendingFiles.slice(), time: new Date().toISOString() };
+  store.messages.unshift(msg); const saved = saveStore(store);
+  const alertEl = document.getElementById('msg-alert');
+  if (saved) { alertEl.className = 'alert alert-success show'; alertEl.textContent = pendingFiles.length > 0 ? 'Message aur ' + pendingFiles.length + ' file(s) save ho gaye!' : 'Message save ho gaya!'; }
+  if (store.adminNumber) { const waText = encodeURIComponent('Private message from ' + name + ':\n' + text + (pendingFiles.length > 0 ? '\n\n(' + pendingFiles.length + ' file(s) attached on website)' : '')); setTimeout(function() { window.open('https://wa.me/' + store.adminNumber + '?text=' + waText, '_blank'); }, 300); }
+  document.getElementById('msg-text').value = ''; pendingFiles = []; renderFileList(); setTimeout(function() { alertEl.classList.remove('show'); }, 4000); return false;
 }
+function adminLogin(e) { e.preventDefault(); store = ensureStore(); if (document.getElementById('admin-pass').value === store.password) { isAdmin = true; showPage('page-admin'); } else { const a = document.getElementById('login-alert'); a.className = 'alert alert-error show'; a.textContent = 'Galat password!'; setTimeout(function(){ a.classList.remove('show'); }, 3000); } return false; }
 function adminLogout() { isAdmin = false; showPage('page-public'); }
 function renderAdmin() {
-  if (!isAdmin) { showPage('page-admin-login'); return; }
-  store = ensureStore();
+  if (!isAdmin) { showPage('page-admin-login'); return; } store = ensureStore();
+  const totalFiles = store.messages.reduce(function(sum, m){ return sum + (m.files ? m.files.length : 0); }, 0);
   document.getElementById('stat-messages').textContent = store.messages.length;
+  document.getElementById('stat-files').textContent = totalFiles;
   const today = new Date().toDateString();
   document.getElementById('stat-today').textContent = store.messages.filter(function(m){ return new Date(m.time).toDateString() === today; }).length;
+  renderMessages(); renderJoins(); renderSettings();
+}
+function renderMessages() {
   const container = document.getElementById('messages-list');
   if (store.messages.length === 0) { container.innerHTML = '<div class="card" style="text-align:center;color:var(--text-dim)">Abhi koi message nahi</div>'; return; }
   container.innerHTML = store.messages.map(function(m) {
-    const d = new Date(m.time);
-    const time = d.toLocaleDateString('hi-IN') + ' ' + d.toLocaleTimeString('hi-IN', {hour:'2-digit',minute:'2-digit'});
-    return '<div class="msg-item"><div class="msg-header"><div class="msg-name">' + escapeHtml(m.name) + '</div><div class="msg-time">' + time + '</div></div><div class="msg-body">' + escapeHtml(m.text) + '</div><div class="msg-actions"><button class="btn btn-outline" style="flex:1" onclick="deleteMessage(' + m.id + ')">Delete</button></div></div>';
+    const d = new Date(m.time); const time = d.toLocaleDateString('hi-IN') + ' ' + d.toLocaleTimeString('hi-IN', {hour:'2-digit',minute:'2-digit'});
+    let attachmentsHtml = '';
+    if (m.files && m.files.length > 0) {
+      attachmentsHtml = '<div class="msg-attachments">';
+      m.files.forEach(function(f) {
+        const ext = getFileExt(f.name); const isImage = f.type && f.type.startsWith('image/');
+        if (isImage) { attachmentsHtml += '<a href="' + f.data + '" download="' + f.name + '" class="attachment"><img class="attachment-preview" src="' + f.data + '" alt="' + f.name + '"><span class="attachment-icon">' + ext + '</span><span>' + escapeHtml(f.name) + '</span><span class="file-chip-size">' + formatSize(f.size) + '</span></a>'; }
+        else { attachmentsHtml += '<a href="' + f.data + '" download="' + f.name + '" class="attachment"><span class="attachment-icon">' + ext + '</span><span>' + escapeHtml(f.name) + '</span><span class="file-chip-size">' + formatSize(f.size) + '</span></a>'; }
+      });
+      attachmentsHtml += '</div>';
+    }
+    const bodyHtml = m.text ? '<div class="msg-body">' + escapeHtml(m.text) + '</div>' : '';
+    return '<div class="msg-item"><div class="msg-header"><div class="msg-name">' + escapeHtml(m.name) + '</div><div class="msg-time">' + time + '</div></div>' + bodyHtml + attachmentsHtml + '<div class="msg-actions"><button class="btn btn-outline" style="flex:1" onclick="deleteMessage(' + m.id + ')">Delete</button>' + (store.adminNumber ? '<a class="btn btn-success" style="flex:1" target="_blank" href="https://wa.me/' + store.adminNumber + '?text=' + encodeURIComponent('Reply to ' + m.name) + '">WhatsApp Reply</a>' : '') + '</div></div>';
   }).join('');
 }
+function renderJoins() {
+  const tbody = document.getElementById('joins-tbody');
+  if (store.joins.length === 0) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--text-dim)">Abhi koi visit nahi</td></tr>'; return; }
+  tbody.innerHTML = store.joins.map(function(j, i) { const d = new Date(j.time); const time = d.toLocaleDateString('hi-IN') + ' ' + d.toLocaleTimeString('hi-IN', {hour:'2-digit',minute:'2-digit'}); return '<tr><td style="font-family:var(--font-mono);font-size:0.82rem;color:var(--text-dim)">' + (i+1) + '</td><td style="font-family:var(--font-mono);font-size:0.82rem;color:var(--text-dim)">' + escapeHtml(j.referrer) + '</td><td style="font-family:var(--font-mono);font-size:0.82rem;color:var(--text-dim)">' + time + '</td></tr>'; }).join('');
+}
+function renderSettings() {
+  document.getElementById('set-group-link').value = store.groupLink || '';
+  document.getElementById('set-admin-number').value = store.adminNumber || '';
+  document.getElementById('set-site-url').value = store.siteUrl || window.location.href;
+  const baseUrl = store.siteUrl || window.location.href.split('#')[0]; const qrUrl = baseUrl.split('#')[0] + '#message'; makeQR('qr-admin-preview', qrUrl);
+}
+function saveSettings() {
+  store.groupLink = document.getElementById('set-group-link').value.trim();
+  store.adminNumber = document.getElementById('set-admin-number').value.trim();
+  store.siteUrl = document.getElementById('set-site-url').value.trim() || window.location.href;
+  saveStore(store); const a = document.getElementById('settings-alert');
+  a.className = 'alert alert-success show'; a.textContent = 'Settings save ho gayi!';
+  const baseUrl = store.siteUrl || window.location.href.split('#')[0]; const qrUrl = baseUrl.split('#')[0] + '#message'; makeQR('qr-admin-preview', qrUrl);
+  setTimeout(function(){ a.classList.remove('show'); }, 3000);
+}
+function downloadQR() {
+  const qrEl = document.getElementById('qr-admin-preview');
+  const canvas = qrEl.querySelector('canvas'); const img = qrEl.querySelector('img');
+  const a = document.getElementById('qr-download-alert'); let dataUrl = null;
+  if (canvas) { dataUrl = canvas.toDataURL('image/png'); } else if (img && img.src) { dataUrl = img.src; }
+  if (!dataUrl) { a.className = 'alert alert-error show'; a.textContent = 'QR code generate nahi hua.'; setTimeout(function(){ a.classList.remove('show'); }, 3000); return; }
+  const link = document.createElement('a'); link.href = dataUrl; link.download = 'qr-code-message.png';
+  document.body.appendChild(link); link.click(); document.body.removeChild(link);
+  a.className = 'alert alert-success show'; a.textContent = 'QR code image download ho gayi!'; setTimeout(function(){ a.classList.remove('show'); }, 3000);
+}
+function changePassword() { const np = document.getElementById('set-new-pass').value; const a = document.getElementById('pass-alert'); if (np.length < 4) { a.className = 'alert alert-error show'; a.textContent = 'Password kam se kam 4 character'; return; } store.password = np; saveStore(store); a.className = 'alert alert-success show'; a.textContent = 'Password updated!'; document.getElementById('set-new-pass').value = ''; setTimeout(function(){ a.classList.remove('show'); }, 3000); }
 function deleteMessage(id) { store.messages = store.messages.filter(function(m){ return m.id !== id; }); saveStore(store); renderAdmin(); }
-function saveSettings() { store.adminNumber = document.getElementById('set-admin-number').value.trim(); saveStore(store); }
-function changePassword() { const np = document.getElementById('set-new-pass').value; if (np.length < 4) { alert('Kam se kam 4 character'); return; } store.password = np; saveStore(store); alert('Password updated!'); document.getElementById('set-new-pass').value = ''; }
+function clearAllMessages() { if (!confirm('Saare messages delete karein?')) return; store.messages = []; saveStore(store); renderAdmin(); }
 function switchTab(e, name) { document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); }); document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); }); e.target.classList.add('active'); document.getElementById('tab-' + name).classList.add('active'); }
 function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]; }); }
+initFileUpload(); renderPublic();
 </script>
 </body>
 </html>
