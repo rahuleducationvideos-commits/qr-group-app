@@ -688,8 +688,10 @@ fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){ret
 var newConfig={password:np,adminNumber:document.getElementById('set-admin-number').value.trim()||'',pwChangeTs:changeTs};
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(newConfig,null,2))));
 fetch(GH_API+'/contents/config.json',{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Update password',content:content,sha:data.sha})}).then(function(r){return r.json()}).then(function(){
-store.password=np;store.pwChangeTs=changeTs;saveStore(store);remoteConfig.password=np;remoteConfig.pwChangeTs=changeTs;
-a.className='alert alert-success show';a.textContent='Password sabhi devices pe update ho gaya! Dusre devices se auto logout ho jayega.';
+/* DON'T update store.pwChangeTs here - so polling detects mismatch and auto-logouts ALL devices including this one */
+remoteConfig.password=np;
+store.password=np;saveStore(store);
+a.className='alert alert-success show';a.textContent='Password update ho gaya! 5 second me sabhi devices se logout ho jayega.';
 document.getElementById('set-new-pass').value='';
 setTimeout(function(){a.classList.remove('show')},5000);
 }).catch(function(err){a.className='alert alert-error show';a.textContent='Error: '+(err.message||'GitHub pe save nahi hua')})
