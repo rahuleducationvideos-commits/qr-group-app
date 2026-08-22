@@ -464,20 +464,34 @@ osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.5);
 }catch(e){}
 }
 
-/* Polling for new messages - 5s interval + auto reload */
+/* Polling for new messages + password change check */
 function startPolling(){
 stopPolling();
 pollTimer=setInterval(function(){
+/* Check for new messages */
 fetch(GH_API+'/contents/messages',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(items){
 if(!items)return;var count=items.filter(function(f){return f.name.endsWith('.json')}).length;
 if(store.lastMsgCount>0&&count>store.lastMsgCount){
 playBeep();
 var badge=document.getElementById('notif-badge');if(badge)badge.classList.add('show');
-/* AUTO RELOAD: new message detected, refresh chat instantly */
 loadMessages();
 }
 store.lastMsgCount=count;saveStore(store);
 }).catch(function(){});
+/* Check if password was changed from another device */
+if(isAdmin){
+fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
+var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+var cfg=JSON.parse(content);
+if(cfg.pwChangeTs&&store.pwChangeTs&&cfg.pwChangeTs!==store.pwChangeTs){
+/* Password changed on another device - auto logout */
+stopPolling();
+isAdmin=false;
+alert('Password change ho gaya hai! Dobara login karein.');
+showPage('page-admin-login');
+}
+}).catch(function(){});
+}
 },5000);
 }
 function stopPolling(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
@@ -526,7 +540,7 @@ fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){ret
 var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 var cfg=JSON.parse(content);
 var pass=cfg.password||'admin123';
-if(entered===pass){remoteConfig=cfg;store.password=pass;store.adminNumber=cfg.adminNumber||'';saveStore(store);isAdmin=true;if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
+if(entered===pass){remoteConfig=cfg;store.password=pass;store.adminNumber=cfg.adminNumber||'';if(cfg.pwChangeTs){store.pwChangeTs=cfg.pwChangeTs}saveStore(store);isAdmin=true;if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
 else{if(btn){btn.disabled=false;btn.textContent='Login'}var a=document.getElementById('login-alert');a.className='alert alert-error show';a.textContent='Galat password!';setTimeout(function(){a.classList.remove('show')},3000)}
 }).catch(function(){
 /* Fallback to local password */
@@ -668,15 +682,16 @@ var np=document.getElementById('set-new-pass').value;
 var a=document.getElementById('pass-alert');
 if(np.length<4){a.className='alert alert-error show';a.textContent='Kam se kam 4 character';return}
 a.className='alert alert-success show';a.textContent='GitHub pe save ho raha hai...';
+var changeTs=Date.now();
 /* Save to config.json on GitHub - works on all devices */
 fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
-var newConfig={password:np,adminNumber:document.getElementById('set-admin-number').value.trim()||''};
+var newConfig={password:np,adminNumber:document.getElementById('set-admin-number').value.trim()||'',pwChangeTs:changeTs};
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(newConfig,null,2))));
 fetch(GH_API+'/contents/config.json',{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Update password',content:content,sha:data.sha})}).then(function(r){return r.json()}).then(function(){
-store.password=np;saveStore(store);remoteConfig.password=np;
-a.className='alert alert-success show';a.textContent='Password sabhi devices pe update ho gaya!';
+store.password=np;store.pwChangeTs=changeTs;saveStore(store);remoteConfig.password=np;remoteConfig.pwChangeTs=changeTs;
+a.className='alert alert-success show';a.textContent='Password sabhi devices pe update ho gaya! Dusre devices se auto logout ho jayega.';
 document.getElementById('set-new-pass').value='';
-setTimeout(function(){a.classList.remove('show')},4000);
+setTimeout(function(){a.classList.remove('show')},5000);
 }).catch(function(err){a.className='alert alert-error show';a.textContent='Error: '+(err.message||'GitHub pe save nahi hua')})
 }).catch(function(){a.className='alert alert-error show';a.textContent='config.json fetch nahi hua'})
 }
