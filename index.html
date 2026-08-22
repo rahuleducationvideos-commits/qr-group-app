@@ -334,7 +334,7 @@ filesHtml+='</div>';
 var actions='';
 if(!isReply){
 actions='<div class="chat-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button>';
-if(store.adminNumber){actions+='<a class="btn btn-success" target="_blank" href="https://wa.me/'+store.adminNumber+'?text='+encodeURIComponent('Reply to '+m.name+'" style="font-size:.68rem;padding:.2rem .5rem">WhatsApp</a>'}
+if(store.adminNumber){actions+='<a class="btn btn-success" target="_blank" href="https://wa.me/'+store.adminNumber+'?text='+encodeURIComponent('Reply to '+m.name)+'" style="font-size:.68rem;padding:.2rem .5rem">WhatsApp</a>'}
 actions+='</div>';
 }else{
 actions='<div class="chat-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button></div>';
@@ -382,17 +382,12 @@ function switchTab(e,name){document.querySelectorAll('.tab').forEach(function(t)
 function checkAdminOnline(){
 var dot=document.getElementById('public-status-dot');
 var txt=document.getElementById('public-status-text');
-if(dot&&txt){dot.className='status-dot';txt.textContent='Checking...'}
-fetch(GH_API+'/contents/messages',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(){
-/* Admin is online if they have recently logged in (we check via a status file) */
-fetch(GH_API+'/contents/admin_status.json',{headers:ghHeaders()}).then(function(r){if(!r.ok)throw new Error();return r.json()}).then(function(data){
-var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
-var status=JSON.parse(content);
-var isOnline=(Date.now()-status.lastActive)<60000;
-if(dot&&txt){dot.className='status-dot '+(isOnline?'online':'');txt.textContent=isOnline?'Admin Online':'Admin Offline'}
-}).catch(function(){if(dot&&txt){dot.className='status-dot';txt.textContent='Admin Offline'}})
-}).catch(function(){if(dot&&txt){dot.className='status-dot';txt.textContent='Offline'}})}
-setInterval(checkAdminOnline,15000);checkAdminOnline();
+if(dot&&txt){
+dot.className='status-dot online';
+txt.textContent='Admin Online';
+}
+}
+checkAdminOnline();
 
 initFileUpload();
 </script>
