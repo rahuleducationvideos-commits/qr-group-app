@@ -152,6 +152,40 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .wa-settings-box h2{margin-bottom:1rem;font-size:1.1rem}
 .wa-close-btn{background:none;border:none;color:var(--text-dim);font-size:1.3rem;cursor:pointer;position:absolute;top:1rem;right:1rem}
 @media(max-width:520px){.wa-bubble{max-width:92%}.wa-header-name{font-size:.85rem}.wa-file-img-wrap{width:100px;height:100px}}
+/* WhatsApp-style settings panel */
+.wa-settings-panel{position:fixed;top:0;right:-420px;width:400px;height:100vh;background:#111b21;z-index:300;transition:right .3s ease;overflow-y:auto;display:flex;flex-direction:column}
+.wa-settings-panel.show{right:0}
+.wa-settings-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:250;display:none}
+.wa-settings-overlay.show{display:block}
+.wa-sp-header{background:#202c33;padding:1rem;display:flex;align-items:center;gap:.8rem;position:sticky;top:0;z-index:10}
+.wa-sp-back{background:none;border:none;color:#e9edef;font-size:1.3rem;cursor:pointer;padding:.2rem}
+.wa-sp-title{font-size:1.1rem;font-weight:500;color:#e9edef}
+.wa-sp-profile{padding:1.5rem 1rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;border-bottom:8px solid #111b21}
+.wa-sp-avatar{width:80px;height:80px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:700}
+.wa-sp-name{font-size:1.2rem;font-weight:500;color:#e9edef}
+.wa-sp-search{padding:.8rem 1rem;border-bottom:8px solid #111b21}
+.wa-sp-search input{width:100%;padding:.6rem .9rem;background:#2a3942;color:#e9edef;border:none;border-radius:8px;font-size:.85rem;outline:none}
+.wa-sp-search input::placeholder{color:#8696a0}
+.wa-sp-menu{flex:1}
+.wa-sp-item{display:flex;align-items:flex-start;gap:.8rem;padding:.9rem 1rem;cursor:pointer;transition:.15s;border-bottom:1px solid rgba(134,150,160,.08)}
+.wa-sp-item:hover{background:rgba(255,255,255,.04)}
+.wa-sp-item-icon{font-size:1.2rem;width:28px;text-align:center;flex-shrink:0;margin-top:.1rem}
+.wa-sp-item-body{flex:1;min-width:0}
+.wa-sp-item-title{font-size:.88rem;font-weight:500;color:#e9edef}
+.wa-sp-item-desc{font-size:.72rem;color:#8696a0;margin-top:.1rem}
+.wa-sp-section{padding:.6rem 1rem .2rem;font-size:.68rem;color:#8696a0;text-transform:uppercase;letter-spacing:.05em}
+.wa-sp-sub{display:none;padding:1rem;background:#111b21}
+.wa-sp-sub.show{display:block}
+.wa-sp-back2{background:none;border:none;color:#e9edef;font-size:.85rem;cursor:pointer;margin-bottom:.8rem;display:flex;align-items:center;gap:.4rem}
+.wa-sp-input{width:100%;padding:.7rem .9rem;background:#2a3942;color:#e9edef;border:1px solid #2a3942;border-radius:8px;font-size:.88rem;outline:none;margin-bottom:.8rem}
+.wa-sp-input:focus{border-color:#00a884}
+.wa-sp-toggle{display:flex;justify-content:space-between;align-items:center;padding:.8rem 0}
+.wa-sp-toggle-label{font-size:.88rem;color:#e9edef}
+.wa-sp-switch{width:38px;height:22px;background:#2a3942;border-radius:12px;position:relative;cursor:pointer;transition:.2s}
+.wa-sp-switch.on{background:#00a884}
+.wa-sp-switch::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#e9edef;transition:.2s}
+.wa-sp-switch.on::after{left:18px}
+@media(max-width:520px){.wa-settings-panel{width:100%;right:-100%}}
 /* Admin nav with online status */
 .admin-nav{position:relative}
 @media(max-width:520px){.stats{grid-template-columns:repeat(3,1fr);gap:.4rem}.stat{padding:.4rem}.stat-num{font-size:1rem}.stat-label{font-size:.6rem}.hero h1{font-size:1.2rem}.hero p{font-size:.8rem}.hero{margin-bottom:.8rem}.chat-area{max-height:90vh}.chat-bubble{max-width:88%}}
@@ -224,30 +258,160 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 </div>
 </div>
 
-<!-- Settings Modal -->
-<div class="wa-settings-modal" id="settings-modal" onclick="if(event.target===this)closeSettings()">
-<div class="wa-settings-box" style="position:relative">
-<button class="wa-close-btn" onclick="closeSettings()">&#10005;</button>
-<h2>Settings</h2>
-<div class="form-group" style="margin-top:.8rem">
-<label>WhatsApp Number (optional)</label>
-<input type="text" id="set-admin-number" placeholder="919876543210">
+<!-- WhatsApp-style Settings Panel -->
+<div class="wa-settings-overlay" id="settings-overlay" onclick="closeSettings()"></div>
+<div class="wa-settings-panel" id="settings-panel">
+<div class="wa-sp-header">
+<button class="wa-sp-back" onclick="closeSettings()">&#8592;</button>
+<div class="wa-sp-title">Settings</div>
 </div>
-<button class="btn btn-primary" onclick="saveSettings()">Save</button>
-<div id="settings-alert" class="alert" style="margin-top:.8rem"></div>
-<hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
-<h2>Password Change</h2>
-<div class="form-group" style="margin-top:.8rem">
-<label>Naya password</label>
-<input type="password" id="set-new-pass" placeholder="Naya password">
+
+<!-- Profile Section -->
+<div class="wa-sp-profile">
+<div class="wa-sp-avatar" id="sp-avatar">A</div>
+<div class="wa-sp-name" id="sp-name">Admin</div>
+<div style="font-size:.72rem;color:#8696a0">QR Group Admin</div>
 </div>
-<button class="btn btn-danger" onclick="changePassword()">Update Password</button>
+
+<!-- Search -->
+<div class="wa-sp-search">
+<input type="text" placeholder="Search" oninput="filterSettings(this.value)">
+</div>
+
+<!-- Menu Items -->
+<div class="wa-sp-menu" id="sp-menu">
+<div class="wa-sp-item" onclick="openSub('profile')">
+<div class="wa-sp-item-icon" style="color:#00a884">&#9679;</div>
+<div class="wa-sp-item-body">
+<div class="wa-sp-item-title">Profile</div>
+<div class="wa-sp-item-desc">Name, admin info</div>
+</div>
+</div>
+<div class="wa-sp-item" onclick="openSub('account')">
+<div class="wa-sp-item-icon" style="color:#00a884">&#128274;</div>
+<div class="wa-sp-item-body">
+<div class="wa-sp-item-title">Account</div>
+<div class="wa-sp-item-desc">Password, security</div>
+</div>
+</div>
+<div class="wa-sp-item" onclick="openSub('chats')">
+<div class="wa-sp-item-icon" style="color:#00a884">&#128172;</div>
+<div class="wa-sp-item-body">
+<div class="wa-sp-item-title">Chats</div>
+<div class="wa-sp-item-desc">WhatsApp number, theme</div>
+</div>
+</div>
+<div class="wa-sp-item" onclick="openSub('notifications')">
+<div class="wa-sp-item-icon" style="color:#00a884">&#128276;</div>
+<div class="wa-sp-item-body">
+<div class="wa-sp-item-title">Notifications</div>
+<div class="wa-sp-item-desc">Message sounds, alerts</div>
+</div>
+</div>
+<div class="wa-sp-item" onclick="openSub('stats')">
+<div class="wa-sp-item-icon" style="color:#00a884">&#128202;</div>
+<div class="wa-sp-item-body">
+<div class="wa-sp-item-title">Statistics</div>
+<div class="wa-sp-item-desc">Messages, files, today</div>
+</div>
+</div>
+<div class="wa-sp-item" onclick="openSub('help')">
+<div class="wa-sp-item-icon" style="color:#00a884">&#10067;</div>
+<div class="wa-sp-item-body">
+<div class="wa-sp-item-title">Help</div>
+<div class="wa-sp-item-desc">About, contact</div>
+</div>
+</div>
+<div class="wa-sp-item" onclick="adminLogout()">
+<div class="wa-sp-item-icon" style="color:#f15c6d">&#10148;</div>
+<div class="wa-sp-item-body">
+<div class="wa-sp-item-title" style="color:#f15c6d">Log out</div>
+</div>
+</div>
+</div>
+
+<!-- Sub-panels -->
+<div class="wa-sp-sub" id="sp-sub-profile">
+<button class="wa-sp-back2" onclick="closeSub()">&#8592; Profile</button>
+<div class="wa-sp-profile" style="padding:0 0 1rem 0">
+<div class="wa-sp-avatar">A</div>
+</div>
+<div class="form-group">
+<label style="color:#8696a0;font-size:.78rem">Admin Name</label>
+<input type="text" class="wa-sp-input" id="set-admin-name" placeholder="Admin" value="Admin">
+</div>
+<button class="btn btn-primary" onclick="saveProfile()" style="width:100%">Save Profile</button>
+<div id="profile-alert" class="alert" style="margin-top:.8rem"></div>
+</div>
+
+<div class="wa-sp-sub" id="sp-sub-account">
+<button class="wa-sp-back2" onclick="closeSub()">&#8592; Account</button>
+<div class="wa-sp-section">Security</div>
+<div class="form-group">
+<label style="color:#8696a0;font-size:.78rem">Naya Password</label>
+<input type="password" class="wa-sp-input" id="set-new-pass" placeholder="Naya password">
+</div>
+<button class="btn btn-danger" onclick="changePassword()" style="width:100%">Update Password</button>
+<div style="font-size:.72rem;color:#8696a0;margin-top:.5rem">Password update karne pe sabhi devices pe sync ho jayega.</div>
 <div id="pass-alert" class="alert" style="margin-top:.8rem"></div>
-<hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
-<div style="display:flex;justify-content:space-around;text-align:center">
-<div><div style="font-size:1.3rem;font-weight:700;color:var(--accent)" id="stat-messages">0</div><div style="font-size:.65rem;color:var(--text-dim)">Total</div></div>
-<div><div style="font-size:1.3rem;font-weight:700;color:var(--accent)" id="stat-today">0</div><div style="font-size:.65rem;color:var(--text-dim)">Aaj</div></div>
-<div><div style="font-size:1.3rem;font-weight:700;color:var(--accent)" id="stat-files">0</div><div style="font-size:.65rem;color:var(--text-dim)">Files</div></div>
+</div>
+
+<div class="wa-sp-sub" id="sp-sub-chats">
+<button class="wa-sp-back2" onclick="closeSub()">&#8592; Chats</button>
+<div class="wa-sp-section">WhatsApp Number</div>
+<div class="form-group">
+<label style="color:#8696a0;font-size:.78rem">Admin WhatsApp Number</label>
+<input type="text" class="wa-sp-input" id="set-admin-number" placeholder="919876543210">
+</div>
+<button class="btn btn-primary" onclick="saveSettings()" style="width:100%">Save Number</button>
+<div id="settings-alert" class="alert" style="margin-top:.8rem"></div>
+<div class="wa-sp-section">Theme</div>
+<div class="wa-sp-toggle">
+<span class="wa-sp-toggle-label">Dark Mode</span>
+<div class="wa-sp-switch on" id="theme-switch" onclick="toggleTheme()"></div>
+</div>
+</div>
+
+<div class="wa-sp-sub" id="sp-sub-notifications">
+<button class="wa-sp-back2" onclick="closeSub()">&#8592; Notifications</button>
+<div class="wa-sp-toggle">
+<span class="wa-sp-toggle-label">Message Sound</span>
+<div class="wa-sp-switch on" id="sound-switch" onclick="toggleSound()"></div>
+</div>
+<div class="wa-sp-toggle">
+<span class="wa-sp-toggle-label">Notification Badge</span>
+<div class="wa-sp-switch on" id="badge-switch" onclick="toggleBadge()"></div>
+</div>
+<div style="font-size:.72rem;color:#8696a0;padding:.5rem 0">Naye message aane pe beep sound aayega.</div>
+<button class="btn btn-primary" onclick="testSound()" style="width:100%;margin-top:.5rem">Test Sound</button>
+</div>
+
+<div class="wa-sp-sub" id="sp-sub-stats">
+<button class="wa-sp-back2" onclick="closeSub()">&#8592; Statistics</button>
+<div style="display:flex;justify-content:space-around;text-align:center;margin-top:1rem">
+<div><div style="font-size:2rem;font-weight:700;color:#00a884" id="stat-messages">0</div><div style="font-size:.72rem;color:#8696a0">Total Messages</div></div>
+</div>
+<div style="display:flex;justify-content:space-around;text-align:center;margin-top:1.5rem">
+<div><div style="font-size:1.5rem;font-weight:700;color:#00a884" id="stat-today">0</div><div style="font-size:.72rem;color:#8696a0">Aaj</div></div>
+<div><div style="font-size:1.5rem;font-weight:700;color:#00a884" id="stat-files">0</div><div style="font-size:.72rem;color:#8696a0">Files</div></div>
+</div>
+</div>
+
+<div class="wa-sp-sub" id="sp-sub-help">
+<button class="wa-sp-back2" onclick="closeSub()">&#8592; Help</button>
+<div style="padding:.5rem 0;color:#e9edef;font-size:.88rem;line-height:1.6">
+<p><strong>QR Group Messaging</strong></p>
+<p style="color:#8696a0;font-size:.82rem;margin-top:.5rem">v11 - WhatsApp Style</p>
+<hr style="border:none;border-top:1px solid #2a3942;margin:.8rem 0">
+<p style="color:#8696a0;font-size:.82rem"><strong>How to use:</strong></p>
+<p style="color:#8696a0;font-size:.82rem;margin-top:.3rem">1. QR code scan karein ya link share karein</p>
+<p style="color:#8696a0;font-size:.82rem">2. Users message/file bhejenge</p>
+<p style="color:#8696a0;font-size:.82rem">3. Admin dashboard me messages aayenge</p>
+<p style="color:#8696a0;font-size:.82rem">4. Admin reply kar sakta hai</p>
+<p style="color:#8696a0;font-size:.82rem">5. File click karein to download hoga</p>
+<hr style="border:none;border-top:1px solid #2a3942;margin:.8rem 0">
+<p style="color:#8696a0;font-size:.72rem">File limit: 50MB per file</p>
+<p style="color:#8696a0;font-size:.72rem">Password GitHub pe sync hota hai</p>
 </div>
 </div>
 </div>
@@ -353,7 +517,7 @@ function renderFileList(){var list=document.getElementById('file-list');var inpu
 /* Admin */
 function adminLogin(e){e.preventDefault();loadRemoteConfig();var entered=document.getElementById('admin-pass').value;setTimeout(function(){var pass=remoteConfig.password||store.password||'admin123';if(entered===pass){isAdmin=true;showPage('page-admin')}else{var a=document.getElementById('login-alert');a.className='alert alert-error show';a.textContent='Galat password!';setTimeout(function(){a.classList.remove('show')},3000)}},800);return false}
 function adminLogout(){isAdmin=false;stopPolling();showPage('page-public')}
-function renderAdmin(){if(!isAdmin){showPage('page-admin-login');return}loadRemoteConfig();store=ensureStore();document.getElementById('set-admin-number').value=store.adminNumber||'';loadMessages()}
+function renderAdmin(){if(!isAdmin){showPage('page-admin-login');return}loadRemoteConfig();store=ensureStore();document.getElementById('set-admin-number').value=store.adminNumber||'';if(store.adminName){document.getElementById('sp-name').textContent=store.adminName;document.getElementById('set-admin-name').value=store.adminName}loadMessages()}
 
 /* Load messages as chat */
 function loadMessages(){
@@ -486,8 +650,43 @@ setTimeout(function(){a.classList.remove('show')},4000);
 }).catch(function(){a.className='alert alert-error show';a.textContent='config.json fetch nahi hua'})
 }
 function switchTab(e,name){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});e.target.classList.add('active');document.getElementById('tab-'+name).classList.add('active');if(name==='messages')loadMessages()}
-function showSettings(){document.getElementById('settings-modal').classList.add('show')}
-function closeSettings(){document.getElementById('settings-modal').classList.remove('show')}
+function showSettings(){
+document.getElementById('settings-overlay').classList.add('show');
+document.getElementById('settings-panel').classList.add('show');
+closeSub();
+}
+function closeSettings(){
+document.getElementById('settings-overlay').classList.remove('show');
+document.getElementById('settings-panel').classList.remove('show');
+}
+function openSub(id){
+document.getElementById('sp-menu').style.display='none';
+document.querySelectorAll('.wa-sp-sub').forEach(function(s){s.classList.remove('show')});
+var el=document.getElementById('sp-sub-'+id);
+if(el){el.classList.add('show')}
+}
+function closeSub(){
+document.getElementById('sp-menu').style.display='block';
+document.querySelectorAll('.wa-sp-sub').forEach(function(s){s.classList.remove('show')});
+}
+function filterSettings(q){
+q=q.toLowerCase();
+document.querySelectorAll('#sp-menu .wa-sp-item').forEach(function(item){
+var t=item.textContent.toLowerCase();
+item.style.display=t.indexOf(q)>=0?'':'none';
+});
+}
+function toggleTheme(){var s=document.getElementById('theme-switch');s.classList.toggle('on')}
+function toggleSound(){var s=document.getElementById('sound-switch');s.classList.toggle('on');store.soundOn=s.classList.contains('on');saveStore(store)}
+function toggleBadge(){var s=document.getElementById('badge-switch');s.classList.toggle('on')}
+function testSound(){playBeep()}
+function saveProfile(){
+var name=document.getElementById('set-admin-name').value.trim()||'Admin';
+store.adminName=name;saveStore(store);
+document.getElementById('sp-name').textContent=name;
+var a=document.getElementById('profile-alert');a.className='alert alert-success show';a.textContent='Profile saved!';
+setTimeout(function(){a.classList.remove('show')},3000);
+}
 
 /* Download file on click - fetch blob then download (works cross-origin, supports print) */
 function downloadFile(el,url,filename){
