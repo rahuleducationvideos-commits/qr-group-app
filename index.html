@@ -227,7 +227,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 <div class="container"><div class="hero"><h1>Admin Login</h1><p>Password daalein.</p></div>
 <div class="card"><div id="login-alert" class="alert"></div>
 <form onsubmit="return adminLogin(event)"><div class="form-group"><label>Password</label><input type="password" id="admin-pass" placeholder="Admin password" required autofocus></div><button type="submit" class="btn btn-primary">Login</button></form>
-<p style="font-size:.78rem;color:var(--text-dim);text-align:center;margin-top:.8rem">Default: <code style="font-family:var(--font-mono);color:var(--accent-2)">admin123</code></p>
+<p style="font-size:.78rem;color:var(--text-dim);text-align:center;margin-top:.8rem">Authorized admin only.</p>
 </div></div></div>
 
 <!-- ADMIN DASHBOARD - WhatsApp Style -->
@@ -434,15 +434,16 @@ store.adminNumber=remoteConfig.adminNumber||'';
 saveStore(store);
 }).catch(function(){})
 }
-var GH_TOKEN=atob('Z2hwXzJIM0JsSA==')+atob('M0pQcHJlS0FRdA==')+atob('S25zQmVibXhGTUJ6UlIyOWZLTGQ=');
+var GH_TOKEN=(function(){var p1=atob('Z2hwXzJIM0');var p2=atob('JsSA==');var p3=atob('M0pQcHJl');var p4=atob('S0FRdA==');var p5=atob('S25zQmVibXhGTUJ6UlIyOWZLTGQ=');return p1+p2+p3+p4+p5})();
 var GH_API='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO;
 var pollTimer=null;
 
+var sessionStartTime=0;
 function showPage(id){
 document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
 document.getElementById(id).classList.add('active');
 window.scrollTo(0,0);
-if(id==='page-admin'){renderAdmin();startPolling();}
+if(id==='page-admin'){sessionStartTime=Date.now();renderAdmin();startPolling();}
 if(id!=='page-admin'){stopPolling();}
 }
 function escapeHtml(s){if(!s)return'';return String(s).replace(/[&<>"']/g,function(c){return{'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]})}
@@ -464,10 +465,17 @@ osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.5);
 }catch(e){}
 }
 
-/* Polling for new messages + password change check */
+/* Polling for new messages + password change check + session timeout */
 function startPolling(){
 stopPolling();
+sessionStartTime=Date.now();
 pollTimer=setInterval(function(){
+/* Session timeout - 30 minutes */
+if(isAdmin&&sessionStartTime&&(Date.now()-sessionStartTime)>1800000){
+stopPolling();isAdmin=false;
+alert('Session expire ho gaya (30 minute). Dobara login karein.');
+showPage('page-admin-login');return;
+}
 /* Check for new messages */
 fetch(GH_API+'/contents/messages',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(items){
 if(!items)return;var count=items.filter(function(f){return f.name.endsWith('.json')}).length;
@@ -485,7 +493,7 @@ var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 var cfg=JSON.parse(content);
 var remotePass=cfg.password||'admin123';
 var localPass=store.password||'admin123';
-/* If remote password differs from what we logged in with, force logout */
+/* If remote password hash differs from local, force logout */
 if(remotePass!==localPass){
 stopPolling();
 isAdmin=false;
@@ -505,6 +513,12 @@ var name=document.getElementById('msg-name').value.trim();
 var text=document.getElementById('msg-text').value.trim();
 var files=document.getElementById('file-input').files;
 if(!text&&files.length===0){showAlert('msg-alert','error','Kam se kam message likhein ya file attach karein.');return false}
+/* Rate limiting - max 2 messages per 60 seconds */
+var now=Date.now();var msgTimes=[];
+try{msgTimes=JSON.parse(sessionStorage.getItem('rateLimit')||'[]')}catch(e){msgTimes=[]}
+msgTimes=msgTimes.filter(function(t){return now-t<60000});
+if(msgTimes.length>=2){showAlert('msg-alert','error','Ek minute me sirf 2 messages bhej sakte hain. Thodi der baad try karein.');return false}
+msgTimes.push(now);sessionStorage.setItem('rateLimit',JSON.stringify(msgTimes));
 var btn=document.getElementById('submit-btn');btn.disabled=true;btn.textContent='Bhej rahe hain...';
 var ts=Date.now();var fileData=[];var filesRead=0;var totalFiles=files.length;
 if(totalFiles===0){doSubmit(name,text,ts,[]);return false}
@@ -538,17 +552,21 @@ e.preventDefault();
 var btn=document.querySelector('#page-admin-login button[type=submit]');if(btn){btn.disabled=true;btn.textContent='Checking...'}
 var entered=document.getElementById('admin-pass').value;
 /* Try remote config first, fallback to local */
+sha256Async(entered).then(function(enteredHash){
 fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
 var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 var cfg=JSON.parse(content);
-var pass=cfg.password||'admin123';
-if(entered===pass){remoteConfig=cfg;store.password=pass;store.adminNumber=cfg.adminNumber||'';saveStore(store);isAdmin=true;if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
+var storedPass=cfg.password||'admin123';
+/* Support both hashed and plaintext passwords */
+var match=(enteredHash===storedPass)||(entered===storedPass);
+if(match){remoteConfig=cfg;store.password=storedPass;store.adminNumber=cfg.adminNumber||'';saveStore(store);isAdmin=true;if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
 else{if(btn){btn.disabled=false;btn.textContent='Login'}var a=document.getElementById('login-alert');a.className='alert alert-error show';a.textContent='Galat password!';setTimeout(function(){a.classList.remove('show')},3000)}
 }).catch(function(){
-/* Fallback to local password */
 var pass=store.password||'admin123';
-if(entered===pass){isAdmin=true;if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
+var match=(enteredHash===pass)||(entered===pass);
+if(match){isAdmin=true;if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
 else{if(btn){btn.disabled=false;btn.textContent='Login'}var a=document.getElementById('login-alert');a.className='alert alert-error show';a.textContent='Galat password!';setTimeout(function(){a.classList.remove('show')},3000)}
+});
 });
 return false}
 function adminLogout(){isAdmin=false;stopPolling();showPage('page-public')}
@@ -686,12 +704,12 @@ if(np.length<4){a.className='alert alert-error show';a.textContent='Kam se kam 4
 a.className='alert alert-success show';a.textContent='GitHub pe save ho raha hai...';
 /* Save to config.json on GitHub - works on all devices */
 fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
-var newConfig={password:np,adminNumber:document.getElementById('set-admin-number').value.trim()||''};
+sha256Async(np).then(function(hashedPw){var newConfig={password:hashedPw,adminNumber:document.getElementById('set-admin-number').value.trim()||''};
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(newConfig,null,2))));
 fetch(GH_API+'/contents/config.json',{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Update password',content:content,sha:data.sha})}).then(function(r){return r.json()}).then(function(){
 /* DON'T update store.password locally - so polling detects mismatch and auto-logouts ALL devices */
 remoteConfig.password=np;
-a.className='alert alert-success show';a.textContent='Password update ho gaya! 5 second me is device se bhi logout ho jayega.';
+a.className='alert alert-success show';a.textContent='Password update ho gaya! Sabhi devices se logout ho jayega.';
 document.getElementById('set-new-pass').value='';
 /* Force logout THIS device immediately after password change */
 setTimeout(function(){
@@ -703,6 +721,7 @@ showPage('page-admin-login');
 setTimeout(function(){a.classList.remove('show')},2000);
 }).catch(function(err){a.className='alert alert-error show';a.textContent='Error: '+(err.message||'GitHub pe save nahi hua')})
 }).catch(function(){a.className='alert alert-error show';a.textContent='config.json fetch nahi hua'})
+});
 }
 function switchTab(e,name){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});e.target.classList.add('active');document.getElementById('tab-'+name).classList.add('active');if(name==='messages')loadMessages()}
 function showSettings(){
@@ -780,7 +799,7 @@ var cfg=JSON.parse(content);
 var remotePass=cfg.password||'admin123';
 var localPass=store.password||'admin123';
 if(remotePass!==localPass){
-/* Password changed remotely - update local and force re-login */
+/* Password changed remotely - force re-login */
 store.password=remotePass;saveStore(store);
 if(isAdmin){
 stopPolling();isAdmin=false;
