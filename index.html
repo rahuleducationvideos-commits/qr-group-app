@@ -123,11 +123,16 @@ input[type=password]{-webkit-text-security:disc!important}
 .wa-header-name{font-weight:600;font-size:.9rem;line-height:1.2}
 .wa-header-status{font-size:.7rem;color:var(--text-dim);line-height:1.2}
 .wa-chat-bg{background:var(--chat-bg);flex:1;overflow-y:auto;padding:.8rem;display:flex;flex-direction:column;gap:.4rem;min-height:0;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
-.wa-bubble{max-width:85%;padding:.5rem .75rem;border-radius:8px;font-size:.85rem;word-wrap:break-word;white-space:pre-wrap;position:relative;animation:bubbleIn .2s ease;line-height:1.4}@keyframes bubbleIn{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.wa-bubble{max-width:85%;padding:.4rem .7rem;border-radius:10px;font-size:.88rem;word-wrap:break-word;white-space:pre-wrap;position:relative;animation:bubbleIn .2s ease;line-height:1.4}@keyframes bubbleIn{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.wa-bubble-text{margin-bottom:.15rem}
+.wa-bubble-bottom{display:flex;justify-content:flex-end;align-items:center;margin-top:.1rem}
+.wa-bubble-grouped{margin-top:1px;border-top-left-radius:3px}
+.wa-bubble.user.wa-bubble-grouped{border-top-left-radius:3px}
+.wa-bubble.admin.wa-bubble-grouped{border-top-right-radius:3px}
 .wa-bubble.user{align-self:flex-start;background:#202c33;border-top-left-radius:0;color:#e9edef}
 .wa-bubble.admin{align-self:flex-end;background:#005c4b;border-top-right-radius:0;color:#e9edef}
-.wa-bubble-name{font-size:.68rem;font-weight:600;margin-bottom:.15rem;color:#8696a0}
-.wa-bubble-time{font-size:.6rem;opacity:.6;margin-top:.2rem;text-align:right;font-family:var(--font-mono);color:#8696a0}
+.wa-bubble-name{font-size:.72rem;font-weight:600;margin-bottom:.25rem;display:block}
+.wa-bubble-time{font-size:.58rem;opacity:.6;font-family:var(--font-mono);color:#8696a0}
 .wa-bubble-files{margin-top:.35rem;display:flex;flex-direction:column;gap:.3rem}
 .wa-file{display:flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.08);border-radius:8px;padding:.5rem .6rem;cursor:pointer;transition:.15s;max-width:260px}
 .wa-file:hover{background:rgba(255,255,255,.15)}
@@ -156,7 +161,7 @@ input[type=password]{-webkit-text-security:disc!important}
 .wa-admin-body{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .wa-date-sep{text-align:center;margin:.8rem 0 .4rem;font-size:.65rem;color:#e9edef;background:rgba(233,237,239,.08);padding:.25rem .7rem;border-radius:8px;align-self:center;font-weight:500}
 .wa-bubble-grouped{margin-top:2px}
-.wa-bubble-grouped .wa-bubble-time{margin-top:.1rem}
+
 .wa-settings-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center}
 .wa-settings-modal.show{display:flex}
 .wa-settings-box{background:var(--surface);border-radius:14px;padding:1.5rem;max-width:400px;width:90%;max-height:80vh;overflow-y:auto}
@@ -788,7 +793,7 @@ var bubbleClass=isReply?'admin':'user';
 var showName=(sender!==lastSender);
 var nameHtml='';
 if(isReply){
-nameHtml=showName?'<div class="wa-bubble-name" style="color:#8696a0">Admin Reply</div>':'';
+nameHtml=showName?'<div class="wa-bubble-name" style="color:#06cf9c">Admin</div>':'';
 }else{
 nameHtml=showName?'<div class="wa-bubble-name" style="color:'+color+'">'+escapeHtml(m.name)+'</div>':'';
 }
@@ -823,11 +828,8 @@ actions+='</div>';
 }else{
 actions='<div class="wa-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button></div>';
 }
-/* Show time only for last message in group */
-var nextMsg=messages[i+1];
-var isLastInGroup=!nextMsg||(nextMsg.type==='reply'?'Admin':nextMsg.name)!==sender||new Date(nextMsg.time).toLocaleDateString('hi-IN',{day:'2-digit',month:'short'})!==dateStr;
-var timeHtml=isLastInGroup?'<div class="wa-bubble-time">'+time+'</div>':'';
-htmlParts.push('<div class="wa-bubble '+bubbleClass+groupClass+'">'+nameHtml+bodyHtml+filesHtml+timeHtml+actions+'</div>');
+var timeHtml='<div class="wa-bubble-time">'+time+'</div>';
+htmlParts.push('<div class="wa-bubble '+bubbleClass+groupClass+'">'+nameHtml+'<div class="wa-bubble-text">'+bodyHtml+'</div>'+filesHtml+'<div class="wa-bubble-bottom"><span class="wa-bubble-time">'+time+'</span></div>'+actions+'</div>');
 });
 container.innerHTML=htmlParts.join('');
 container.scrollTop=container.scrollHeight;
