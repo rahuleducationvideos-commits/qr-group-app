@@ -328,7 +328,7 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 <div id="msg-alert" class="alert"></div>
 <form id="msg-form" onsubmit="return submitMessage(event)">
 <div class="form-group"><label>Aapka naam</label><input type="text" id="msg-name" placeholder="Naam likhein" required></div>
-<div class="form-group"><label>Email ID (optional - reply email milega)</label><input type="email" id="msg-email" placeholder="aap@email.com"></div>
+<div class="form-group"><label>Email ID (ispe message ki copy aayegi)</label><input type="email" id="msg-email" placeholder="aap@email.com" style="width:100%"></div>
 <div class="form-group"><label>Message</label><textarea id="msg-text" placeholder="Apna message yahan likhein..."></textarea></div>
 <div class="form-group"><label>File attach karein (Photo, PDF - optional, max 50MB)</label>
 <div class="file-upload">
@@ -674,6 +674,8 @@ var msg={id:ts,name:name,email:email,text:text,files:fileData.map(function(f){re
 var fileName='messages/msg_'+ts+'.json';
 /* Send email notification to admin via Web3Forms */
 sendEmailNotification('admin',name,email,text,fileData);
+/* Also send copy to user's email if they provided one */
+if(email){sendEmailNotification('user_copy',name,email,text,fileData);}
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(msg,null,2))));
 fetch(GH_API+'/contents/'+fileName,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'New message from '+name,content:content})}).then(function(r){if(!r.ok){return safeJson(r).then(function(e){throw new Error(e.message||('HTTP '+r.status))})}return safeJson(r)}).then(function(data){
 if(data.content){
@@ -682,7 +684,9 @@ var fname='messages/files/msg_'+ts+'_'+f.name.replace(/[^a-zA-Z0-9.]/g,'_');
 fetch(GH_API+'/contents/'+fname,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'File: '+f.name,content:f.data.split(',')[1]})}).then(function(){saved++;if(saved===fileData.length)onSubmitDone()}).catch(function(){saved++;if(saved===fileData.length)onSubmitDone()})})}else{onSubmitDone()}
 }else{showAlert('msg-alert','error','Message save nahi hua.');btn.disabled=false;btn.textContent='Message + File Bhejein'}
 }).catch(function(err){showAlert('msg-alert','error','Error: '+(err.message||'Network'));btn.disabled=false;btn.textContent='Message + File Bhejein'})}
-function onSubmitDone(){var btn=document.getElementById('submit-btn');btn.disabled=false;btn.textContent='Message + File Bhejein';showAlert('msg-alert','success','Message admin dashboard pe bhej diya!');document.getElementById('msg-name').value='';document.getElementById('msg-email').value='';document.getElementById('msg-text').value='';document.getElementById('file-input').value='';renderFileList();setTimeout(function(){var a=document.getElementById('msg-alert');a.classList.remove('show')},5000)}
+function onSubmitDone(){var btn=document.getElementById('submit-btn');btn.disabled=false;btn.textContent='Message + File Bhejein';var successMsg='Message bhej diya!';
+if(email){successMsg='Message bhej diya! Email copy aapke email pe bhej di gayi.'}
+showAlert('msg-alert','success',successMsg);document.getElementById('msg-name').value='';document.getElementById('msg-email').value='';document.getElementById('msg-text').value='';document.getElementById('file-input').value='';renderFileList();setTimeout(function(){var a=document.getElementById('msg-alert');a.classList.remove('show')},5000)}
 
 /* File upload UI */
 function initFileUpload(){var drop=document.getElementById('file-drop');var input=document.getElementById('file-input');input.addEventListener('change',renderFileList);drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('dragover')});drop.addEventListener('dragleave',function(e){drop.classList.remove('dragover')});drop.addEventListener('drop',function(e){e.preventDefault();drop.classList.remove('dragover');if(e.dataTransfer.files.length>0){input.files=e.dataTransfer.files;renderFileList()}})}
@@ -905,6 +909,17 @@ formData.append('_template','box');
 fetch('https://formsubmit.co/'+toEmail,{method:'POST',body:formData,headers:{'Accept':'application/json'}}).then(function(r){return r.json()}).then(function(data){
 console.log('Admin email sent:',data.success)
 }).catch(function(e){console.log('Admin email error:',e)});
+}else if(type==='user_copy'){
+/* Email to user: copy of their own message */
+toEmail=fromEmail;
+if(!toEmail)return;
+subject='Aapka Message Received - QR Group Messaging';
+body='Hi '+fromName+',\n\nAapka message successfully bhej diya gaya:\n\n'+message+'\n';
+if(fileData&&fileData.length>0){
+body+='\nFiles attached: '+fileData.length+'\n';
+fileData.forEach(function(f){body+=' - '+f.name+' ('+formatSize(f.size)+')\n'});
+}
+body+='\nAdmin jald reply karenge.\n\n---\nQR Group Messaging';
 }else{
 /* Email to user: admin replied */
 toEmail=fromEmail;
