@@ -869,16 +869,15 @@ loadMessages();
 }).catch(function(err){btn.disabled=false;alert('Reply nahi gaya: '+(err.message||'Error'))});
 }
 
-/* Email notification via Web3Forms - free, no API key needed */
-var WEB3FORMS_KEY='YOUR_ACCESS_KEY_HERE';
+/* Email notification via FormSubmit - FREE, NO API KEY needed */
 var ADMIN_EMAIL='tpa.fbd@metrohospitals.com';
 function sendEmailNotification(type,fromName,fromEmail,message,fileData){
 try{
-var subject,body,toEmail;
+var subject,body,toEmail,formData;
 if(type==='admin'){
 /* Email to admin: new message received */
 toEmail=ADMIN_EMAIL;
-subject='New Message from '+fromName+' - QR Group';
+subject='New Message from '+fromName;
 body='Name: '+fromName+'\n';
 if(fromEmail){body+='Email: '+fromEmail+'\n'}
 body+='\nMessage:\n'+message+'\n';
@@ -887,22 +886,32 @@ body+='\nFiles attached: '+fileData.length+'\n';
 fileData.forEach(function(f){body+=' - '+f.name+' ('+formatSize(f.size)+')\n'});
 }
 body+='\n---\nSent from QR Group Messaging App';
+/* FormSubmit - no key needed, just POST to email URL */
+formData=new FormData();
+formData.append('_subject',subject);
+formData.append('name',fromName);
+formData.append('email',fromEmail||'noreply@qrgroup.com');
+formData.append('message',body);
+formData.append('_template','box');
+fetch('https://formsubmit.co/'+toEmail,{method:'POST',body:formData,headers:{'Accept':'application/json'}}).then(function(r){return r.json()}).then(function(data){
+console.log('Admin email sent:',data.success)
+}).catch(function(e){console.log('Admin email error:',e)});
 }else{
 /* Email to user: admin replied */
 toEmail=fromEmail;
+if(!toEmail)return;
 subject='Admin Reply - QR Group Messaging';
 body='Hi '+fromName+',\n\nAdmin ne aapka reply bheja:\n\n'+message+'\n\n---\nQR Group Messaging';
-}
-var formData=new FormData();
-formData.append('access_key',WEB3FORMS_KEY);
-formData.append('subject',subject);
-formData.append('from_name','QR Group Messaging');
-formData.append('to',toEmail);
+formData=new FormData();
+formData.append('_subject',subject);
+formData.append('name','QR Group Admin');
+formData.append('email',ADMIN_EMAIL);
 formData.append('message',body);
-fetch('https://api.web3forms.com/submit',{method:'POST',body:formData}).then(function(r){return r.json()}).then(function(data){
-if(data.success){console.log('Email sent successfully to '+toEmail)}
-else{console.log('Email failed:',data.message)}
-}).catch(function(e){console.log('Email error:',e)});
+formData.append('_template','box');
+fetch('https://formsubmit.co/'+toEmail,{method:'POST',body:formData,headers:{'Accept':'application/json'}}).then(function(r){return r.json()}).then(function(data){
+console.log('User email sent:',data.success)
+}).catch(function(e){console.log('User email error:',e)});
+}
 }catch(e){console.log('Email function error:',e)}
 }
 
