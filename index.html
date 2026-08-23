@@ -154,7 +154,9 @@ input[type=password]{-webkit-text-security:disc!important}
 .wa-refresh{background:none;border:none;color:#8696a0;cursor:pointer;font-size:1rem;padding:.3rem}
 .wa-admin-page{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .wa-admin-body{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
-.wa-date-sep{text-align:center;margin:.5rem 0;font-size:.65rem;color:#8696a0;background:rgba(0,0,0,.2);padding:.2rem .6rem;border-radius:8px;align-self:center}
+.wa-date-sep{text-align:center;margin:.8rem 0 .4rem;font-size:.65rem;color:#e9edef;background:rgba(233,237,239,.08);padding:.25rem .7rem;border-radius:8px;align-self:center;font-weight:500}
+.wa-bubble-grouped{margin-top:2px}
+.wa-bubble-grouped .wa-bubble-time{margin-top:.1rem}
 .wa-settings-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center}
 .wa-settings-modal.show{display:flex}
 .wa-settings-box{background:var(--surface);border-radius:14px;padding:1.5rem;max-width:400px;width:90%;max-height:80vh;overflow-y:auto}
@@ -756,13 +758,43 @@ if(!list.querySelector('.wa-bubble')){list.innerHTML='<div class="empty" style="
 function renderChat(messages){
 var container=document.getElementById('messages-list');
 if(messages.length===0){container.innerHTML='<div class="empty">Abhi koi message nahi.</div>';return}
-container.innerHTML=messages.map(function(m){
+/* Group messages by date + sender */
+var htmlParts=[];
+var lastDate='';
+var lastSender='';
+var senderColors={};
+var colorPalette=['#e57373','#64b5f6','#81c784','#ffb74d','#ba68c8','#4dd0e1','#a1887f','#90a4ae','#f06292','#7986cb'];
+var colorIdx=0;
+messages.forEach(function(m,i){
 var d=new Date(m.time);
 var time=d.toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'});
-var dateStr=d.toLocaleDateString('hi-IN');
+var dateStr=d.toLocaleDateString('hi-IN',{day:'2-digit',month:'short'});
 var isReply=m.type==='reply';
+var sender=isReply?'Admin':m.name;
+/* Date separator */
+if(dateStr!==lastDate){
+htmlParts.push('<div class="wa-date-sep">'+dateStr+'</div>');
+lastDate=dateStr;
+lastSender='';
+}
+/* Assign color to each sender */
+if(!senderColors[sender]){
+senderColors[sender]=colorPalette[colorIdx%colorPalette.length];
+colorIdx++;
+}
+var color=senderColors[sender];
 var bubbleClass=isReply?'admin':'user';
-var nameHtml=isReply?'<div class="wa-bubble-name">Admin Reply</div>':'<div class="wa-bubble-name">'+escapeHtml(m.name)+'</div>';
+/* Show name only if sender changed from previous message */
+var showName=(sender!==lastSender);
+var nameHtml='';
+if(isReply){
+nameHtml=showName?'<div class="wa-bubble-name" style="color:#8696a0">Admin Reply</div>':'';
+}else{
+nameHtml=showName?'<div class="wa-bubble-name" style="color:'+color+'">'+escapeHtml(m.name)+'</div>':'';
+}
+lastSender=sender;
+/* Add left margin if same sender (grouping) */
+var groupClass=(!showName)?' wa-bubble-grouped':'';
 var bodyHtml=m.text?'<div>'+escapeHtml(m.text)+'</div>':'';
 var filesHtml='';
 if(m.files&&m.files.length>0){
@@ -791,8 +823,13 @@ actions+='</div>';
 }else{
 actions='<div class="wa-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button></div>';
 }
-return '<div class="wa-bubble '+bubbleClass+'">'+nameHtml+bodyHtml+filesHtml+'<div class="wa-bubble-time">'+time+'</div>'+actions+'</div>';
-}).join('');
+/* Show time only for last message in group */
+var nextMsg=messages[i+1];
+var isLastInGroup=!nextMsg||(nextMsg.type==='reply'?'Admin':nextMsg.name)!==sender||new Date(nextMsg.time).toLocaleDateString('hi-IN',{day:'2-digit',month:'short'})!==dateStr;
+var timeHtml=isLastInGroup?'<div class="wa-bubble-time">'+time+'</div>':'';
+htmlParts.push('<div class="wa-bubble '+bubbleClass+groupClass+'">'+nameHtml+bodyHtml+filesHtml+timeHtml+actions+'</div>');
+});
+container.innerHTML=htmlParts.join('');
 container.scrollTop=container.scrollHeight;
 var lu=document.getElementById('chat-last-update');
 if(lu){lu.textContent='Last updated: '+new Date().toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'})}
