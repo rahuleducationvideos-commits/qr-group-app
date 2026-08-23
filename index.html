@@ -476,13 +476,19 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 
 <div class="wa-sp-sub" id="sp-sub-chats">
 <button class="wa-sp-back2" onclick="closeSub()">&#8592; Chats</button>
+<div class="wa-sp-section">Admin Email (jahan messages aayenge)</div>
+<div class="form-group">
+<label style="color:#8696a0;font-size:.78rem">Admin Email ID</label>
+<input type="email" class="wa-sp-input" id="set-admin-email" placeholder="tpa.fbd@metrohospitals.com">
+</div>
 <div class="wa-sp-section">WhatsApp Number</div>
 <div class="form-group">
 <label style="color:#8696a0;font-size:.78rem">Admin WhatsApp Number</label>
 <input type="text" class="wa-sp-input" id="set-admin-number" placeholder="919876543210">
 </div>
-<button class="btn btn-primary" onclick="saveSettings()" style="width:100%">Save Number</button>
+<button class="btn btn-primary" onclick="saveSettings()" style="width:100%">Save Settings</button>
 <div id="settings-alert" class="alert" style="margin-top:.8rem"></div>
+<div style="font-size:.7rem;color:#8696a0;margin-top:.5rem">Pehli baar email aane pe activate karna hoga (email me link aayega).</div>
 <div class="wa-sp-section">Theme</div>
 <div class="wa-sp-toggle">
 <span class="wa-sp-toggle-label">Dark Mode</span>
@@ -538,7 +544,7 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 var GH_OWNER='rahuleducationvideos-commits';var GH_REPO='qr-group-app';var STORE_KEY='qrGroupApp_v5';
 function getStore(){try{return JSON.parse(localStorage.getItem(STORE_KEY))||{}}catch(e){return{}}}
 function saveStore(s){try{localStorage.setItem(STORE_KEY,JSON.stringify(s))}catch(e){return false}return true}
-function defaults(){return{password:'admin123',adminNumber:'',lastMsgCount:0}}
+function defaults(){return{password:'admin123',adminNumber:'',adminEmail:'',lastMsgCount:0}}
 function ensureStore(){var s=getStore();var d=defaults();for(var k in d)if(s[k]===undefined)s[k]=d[k];saveStore(s);return s}
 var store=ensureStore();var isAdmin=false;
 /* Remote config - fetches password + adminNumber from config.json on GitHub */
@@ -695,7 +701,7 @@ var cfg=JSON.parse(content);
 var storedPass=cfg.password||'admin123';
 /* Support both hashed and plaintext passwords */
 var match=(enteredHash===storedPass)||(entered===storedPass);
-if(match){remoteConfig=cfg;store.password=storedPass;store.adminNumber=cfg.adminNumber||'';saveStore(store);isAdmin=true;
+if(match){remoteConfig=cfg;store.password=storedPass;store.adminNumber=cfg.adminNumber||'';store.adminEmail=cfg.adminEmail||'';saveStore(store);isAdmin=true;
 /* Clear password field immediately after login */
 var pi=document.getElementById('admin-pass');if(pi)pi.value='';
 if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
@@ -719,12 +725,12 @@ if(passInput){passInput.value=''}
 store.password='';saveStore(store);
 /* Clear settings inputs */
 var np=document.getElementById('set-new-pass');if(np)np.value='';
-var an=document.getElementById('set-admin-number');if(an)an.value='';
+var an=document.getElementById('set-admin-number');if(an)an.value='';var ae=document.getElementById('set-admin-email');if(ae)ae.value='';
 /* Clear remote config */
 remoteConfig={password:'',adminNumber:''};
 showPage('page-public');
 }
-function renderAdmin(){if(!isAdmin){showPage('page-admin-login');return}loadRemoteConfig();store=ensureStore();document.getElementById('set-admin-number').value=store.adminNumber||'';if(store.adminName){document.getElementById('sp-name').textContent=store.adminName;document.getElementById('set-admin-name').value=store.adminName}loadMessages()}
+function renderAdmin(){if(!isAdmin){showPage('page-admin-login');return}loadRemoteConfig();store=ensureStore();document.getElementById('set-admin-number').value=store.adminNumber||'';var ae=document.getElementById('set-admin-email');if(ae)ae.value=store.adminEmail||'';if(store.adminName){document.getElementById('sp-name').textContent=store.adminName;document.getElementById('set-admin-name').value=store.adminName}loadMessages()}
 
 /* Load messages - FAST parallel fetch */
 function loadMessages(){
@@ -871,12 +877,15 @@ loadMessages();
 
 /* Email notification via FormSubmit - FREE, NO API KEY needed */
 var ADMIN_EMAIL='tpa.fbd@metrohospitals.com';
+function getAdminEmail(){
+return store.adminEmail||remoteConfig.adminEmail||ADMIN_EMAIL;
+}
 function sendEmailNotification(type,fromName,fromEmail,message,fileData){
 try{
 var subject,body,toEmail,formData;
 if(type==='admin'){
 /* Email to admin: new message received */
-toEmail=ADMIN_EMAIL;
+toEmail=getAdminEmail();
 subject='New Message from '+fromName;
 body='Name: '+fromName+'\n';
 if(fromEmail){body+='Email: '+fromEmail+'\n'}
@@ -930,13 +939,14 @@ function deleteMessage(path){if(!confirm('Message delete karein?'))return;fetch(
 /* Settings */
 function saveSettings(){
 var num=document.getElementById('set-admin-number').value.trim();
+var email=document.getElementById('set-admin-email').value.trim();
 var a=document.getElementById('settings-alert');
 a.className='alert alert-success show';a.textContent='GitHub pe save ho raha hai...';
 fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){
-var newConfig={password:remoteConfig.password||store.password||'admin123',adminNumber:num};
+var newConfig={password:remoteConfig.password||store.password||'admin123',adminNumber:num,adminEmail:email};
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(newConfig,null,2))));
 fetch(GH_API+'/contents/config.json',{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Update admin number',content:content,sha:data.sha})}).then(function(r){return safeJson(r)}).then(function(){
-store.adminNumber=num;saveStore(store);remoteConfig.adminNumber=num;
+store.adminNumber=num;store.adminEmail=email;saveStore(store);remoteConfig.adminNumber=num;remoteConfig.adminEmail=email;
 a.className='alert alert-success show';a.textContent='Settings sabhi devices pe update hui!';
 setTimeout(function(){a.classList.remove('show')},4000);
 }).catch(function(err){a.className='alert alert-error show';a.textContent='Error: '+(err.message||'Save nahi hua')})
@@ -949,7 +959,7 @@ if(np.length<4){a.className='alert alert-error show';a.textContent='Kam se kam 4
 a.className='alert alert-success show';a.textContent='GitHub pe save ho raha hai...';
 /* Save to config.json on GitHub - works on all devices */
 fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){
-sha256Async(np).then(function(hashedPw){var newConfig={password:hashedPw,adminNumber:document.getElementById('set-admin-number').value.trim()||''};
+sha256Async(np).then(function(hashedPw){var newConfig={password:hashedPw,adminNumber:document.getElementById('set-admin-number').value.trim()||'',adminEmail:document.getElementById('set-admin-email').value.trim()||remoteConfig.adminEmail||''};
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(newConfig,null,2))));
 fetch(GH_API+'/contents/config.json',{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Update password',content:content,sha:data.sha})}).then(function(r){return safeJson(r)}).then(function(){
 /* DON'T update store.password locally - so polling detects mismatch and auto-logouts ALL devices */
