@@ -106,6 +106,15 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .loading{text-align:center;padding:2rem;color:var(--text-dim);font-family:var(--font-mono)}
 .empty{text-align:center;padding:2rem;color:var(--text-dim)}
+/* Security: prevent text selection on sensitive elements */
+input[type=password]{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-text-security:disc}
+input[type=password]::selection{background:transparent}
+input[type=password]::-moz-selection{background:transparent}
+/* Prevent drag of password */
+input[type=password]{-webkit-user-drag:none}
+/* Disable autofill - hide password from browser password manager */
+input[type=password]{-webkit-text-security:disc!important}
+@media screen and (-webkit-min-device-pixel-ratio:0){input[type=password]{-webkit-text-security:disc}}
 /* WhatsApp-style admin dashboard */
 .wa-header{background:var(--surface);padding:.6rem 1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
 .wa-header-left{display:flex;align-items:center;gap:.6rem}
@@ -192,6 +201,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 </style>
 </head>
 <body>
+<noscript><div style="padding:2rem;text-align:center;color:#dc2626;font-size:1.2rem">JavaScript enable karein. Ye site bina JavaScript kaam nahi karegi.</div></noscript>
 
 <!-- PUBLIC PAGE -->
 <div class="page active" id="page-public">
@@ -226,7 +236,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 <nav class="nav"><div class="nav-brand">QR<span>::</span>GroupJoin</div><button class="nav-btn" onclick="showPage('page-public')">Back</button></nav>
 <div class="container"><div class="hero"><h1>Admin Login</h1><p>Password daalein.</p></div>
 <div class="card"><div id="login-alert" class="alert"></div>
-<form onsubmit="return adminLogin(event)"><div class="form-group"><label>Password</label><input type="password" id="admin-pass" placeholder="Admin password" required autofocus></div><button type="submit" class="btn btn-primary">Login</button></form>
+<form onsubmit="return adminLogin(event)"><div class="form-group"><label>Password</label><input type="password" id="admin-pass" placeholder="Admin password" required autofocus autocomplete="off" oncopy="return false" oncut="return false" onpaste="return false" oncontextmenu="return false" style="-webkit-user-select:none;user-select:none"></div><button type="submit" class="btn btn-primary">Login</button></form>
 <p style="font-size:.78rem;color:var(--text-dim);text-align:center;margin-top:.8rem">Authorized admin only.</p>
 </div></div></div>
 
@@ -429,7 +439,6 @@ function loadRemoteConfig(){
 fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){
 var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 remoteConfig=JSON.parse(content);
-store.password=remoteConfig.password||'admin123';
 store.adminNumber=remoteConfig.adminNumber||'';
 saveStore(store);
 }).catch(function(){})
@@ -508,9 +517,9 @@ fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){ret
 var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 var cfg=JSON.parse(content);
 var remotePass=cfg.password||'admin123';
-var localPass=store.password||'admin123';
-/* If remote password hash differs from local, force logout */
-if(remotePass!==localPass){
+var localPass=store.password||'';
+/* If we had a password and it changed remotely, force logout */
+if(localPass&&remotePass!==localPass){
 stopPolling();
 isAdmin=false;
 alert('Password change ho gaya hai! Naye password se login karein.');
@@ -575,17 +584,35 @@ var cfg=JSON.parse(content);
 var storedPass=cfg.password||'admin123';
 /* Support both hashed and plaintext passwords */
 var match=(enteredHash===storedPass)||(entered===storedPass);
-if(match){remoteConfig=cfg;store.password=storedPass;store.adminNumber=cfg.adminNumber||'';saveStore(store);isAdmin=true;if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
+if(match){remoteConfig=cfg;store.password=storedPass;store.adminNumber=cfg.adminNumber||'';saveStore(store);isAdmin=true;
+/* Clear password field immediately after login */
+var pi=document.getElementById('admin-pass');if(pi)pi.value='';
+if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
 else{if(btn){btn.disabled=false;btn.textContent='Login'}var a=document.getElementById('login-alert');a.className='alert alert-error show';a.textContent='Galat password!';setTimeout(function(){a.classList.remove('show')},3000)}
 }).catch(function(){
 var pass=store.password||'admin123';
 var match=(enteredHash===pass)||(entered===pass);
-if(match){isAdmin=true;if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
+if(match){isAdmin=true;
+var pi2=document.getElementById('admin-pass');if(pi2)pi2.value='';
+if(btn){btn.disabled=false;btn.textContent='Login'}showPage('page-admin')}
 else{if(btn){btn.disabled=false;btn.textContent='Login'}var a=document.getElementById('login-alert');a.className='alert alert-error show';a.textContent='Galat password!';setTimeout(function(){a.classList.remove('show')},3000)}
 });
 });
 return false}
-function adminLogout(){isAdmin=false;stopPolling();showPage('page-public')}
+function adminLogout(){
+isAdmin=false;stopPolling();
+/* Clear password field */
+var passInput=document.getElementById('admin-pass');
+if(passInput){passInput.value=''}
+/* Clear stored password from localStorage */
+store.password='';saveStore(store);
+/* Clear settings inputs */
+var np=document.getElementById('set-new-pass');if(np)np.value='';
+var an=document.getElementById('set-admin-number');if(an)an.value='';
+/* Clear remote config */
+remoteConfig={password:'',adminNumber:''};
+showPage('page-public');
+}
 function renderAdmin(){if(!isAdmin){showPage('page-admin-login');return}loadRemoteConfig();store=ensureStore();document.getElementById('set-admin-number').value=store.adminNumber||'';if(store.adminName){document.getElementById('sp-name').textContent=store.adminName;document.getElementById('set-admin-name').value=store.adminName}loadMessages()}
 
 /* Load messages - FAST parallel fetch */
@@ -804,6 +831,8 @@ dot.className='status-dot online';
 txt.textContent='Admin Online';
 }
 }
+/* Clear any stored password on page load for security */
+if(store.password){store.password='';saveStore(store)}
 checkAdminOnline();
 loadRemoteConfig();
 
@@ -813,10 +842,10 @@ fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){ret
 var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 var cfg=JSON.parse(content);
 var remotePass=cfg.password||'admin123';
-var localPass=store.password||'admin123';
-if(remotePass!==localPass){
+var localPass=store.password||'';
+if(localPass&&remotePass!==localPass){
 /* Password changed remotely - force re-login */
-store.password=remotePass;saveStore(store);
+store.password='';saveStore(store);
 if(isAdmin){
 stopPolling();isAdmin=false;
 alert('Password change ho gaya hai! Naye password se login karein.');
