@@ -204,69 +204,100 @@ input[type=password]{-webkit-text-security:disc!important}
 <noscript><div style="padding:2rem;text-align:center;color:#dc2626;font-size:1.2rem">JavaScript enable karein. Ye site bina JavaScript kaam nahi karegi.</div></noscript>
 <!-- Anti-screenshot protection -->
 <style>
-/* Blur entire page when window loses focus (prevents screenshot from other apps) */
-body.blurred *{filter:blur(8px)!important;pointer-events:none}
+/* Black overlay when window loses focus */
+#sec-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:99999;display:none}
+body.blurred #sec-overlay{display:block}
+body.blurred .page{display:none!important}
 /* Hide content during print */
 @media print{body{display:none!important}}
 /* Prevent selection on entire page */
 body{-webkit-user-select:none;-moz-user-select:none;user-select:none}
 input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 </style>
+<div id="sec-overlay"></div>
 <script>
 (function(){
-/* 1. Blur page when window loses focus - prevents screenshot from other apps */
+/* 1. BLACK OVERLAY when window loses focus */
 window.addEventListener('blur',function(){
 document.body.classList.add('blurred');
-/* Clear password field if visible */
 var p=document.getElementById('admin-pass');if(p)p.value='';
+var np=document.getElementById('set-new-pass');if(np)np.value='';
 });
 window.addEventListener('focus',function(){
 document.body.classList.remove('blurred');
 });
 
-/* 2. Detect PrintScreen key - clear sensitive data */
-document.addEventListener('keyup',function(e){
-if(e.key==='PrintScreen'||e.keyCode===44){
-/* Clear clipboard and password fields */
+/* 2. Capture PrintScreen on KEYDOWN (before screenshot is taken) */
+document.addEventListener('keydown',function(e){
+if(e.key==='PrintScreen'||e.keyCode===44||e.code==='PrintScreen'){
+e.preventDefault();
+/* Clear clipboard immediately */
+try{navigator.clipboard.writeText(' ')}catch(err){}
+if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText('BLOCKED')}
+/* Clear password fields */
 var p=document.getElementById('admin-pass');if(p)p.value='';
 var np=document.getElementById('set-new-pass');if(np)np.value='';
-/* Try to clear clipboard */
-try{navigator.clipboard.writeText('')}catch(e){}
-alert('Screenshot disabled! Sensitive data cleared.');
+return false;
 }
 });
-
-/* 3. Block Ctrl+P (print) and Ctrl+Shift+S (screenshot) */
-document.addEventListener('keydown',function(e){
-if((e.ctrlKey&&e.key==='p')||(e.ctrlKey&&e.shiftKey&&e.key==='S')||(e.ctrlKey&&e.key==='s'&&e.shiftKey)){
+/* Also on keyup as backup */
+document.addEventListener('keyup',function(e){
+if(e.key==='PrintScreen'||e.keyCode===44||e.code==='PrintScreen'){
 e.preventDefault();
-alert('Ye action disabled hai!');
+try{navigator.clipboard.writeText('BLOCKED')}catch(err){}
+var p=document.getElementById('admin-pass');if(p)p.value='';
+var np=document.getElementById('set-new-pass');if(np)np.value='';
 return false;
 }
 });
 
-/* 4. Block right-click context menu */
-document.addEventListener('contextmenu',function(e){
-e.preventDefault();return false;
-});
+/* 3. CONTINUOUS clipboard clearing - check every 300ms */
+setInterval(function(){
+try{
+navigator.clipboard.readText().then(function(text){
+if(text&&text.length>0){
+/* If clipboard has content, it might be a screenshot - clear it */
+navigator.clipboard.writeText('').catch(function(){});
+}
+}).catch(function(){});
+}catch(e){}
+},300);
 
-/* 5. Detect visibility change (tab switch / minimize) */
+/* 4. Block Ctrl+P, Ctrl+Shift+S, Win+Shift+S (Snipping Tool) */
+document.addEventListener('keydown',function(e){
+/* Ctrl+P */
+if(e.ctrlKey&&(e.key==='p'||e.key==='P')){e.preventDefault();return false}
+/* Ctrl+Shift+S */
+if(e.ctrlKey&&e.shiftKey&&(e.key==='s'||e.key==='S')){e.preventDefault();return false}
+/* Shift+PrintScreen */
+if(e.shiftKey&&(e.key==='PrintScreen'||e.keyCode===44)){e.preventDefault();return false}
+/* Alt+PrintScreen */
+if(e.altKey&&(e.key==='PrintScreen'||e.keyCode===44)){e.preventDefault();return false}
+/* Win+Shift+S - can't fully block but try */
+if(e.metaKey&&e.shiftKey&&(e.key==='s'||e.key==='S')){e.preventDefault();return false}
+},true);
+
+/* 5. Block right-click */
+document.addEventListener('contextmenu',function(e){e.preventDefault();return false});
+
+/* 6. Tab switch/minimize - clear passwords */
 document.addEventListener('visibilitychange',function(){
 if(document.hidden){
-/* Clear password when tab is hidden */
 var p=document.getElementById('admin-pass');if(p)p.value='';
 var np=document.getElementById('set-new-pass');if(np)np.value='';
 }
 });
 
-/* 6. Block print */
+/* 7. Block print completely */
 window.addEventListener('beforeprint',function(e){
 e.preventDefault();
 document.body.style.display='none';
 return false;
 });
-window.addEventListener('afterprint',function(e){
-document.body.style.display='';
+
+/* 8. Detect mouse leaving window (screenshot tool drag) */
+document.addEventListener('mouseleave',function(){
+var p=document.getElementById('admin-pass');if(p)p.value='';
 });
 
 })();
