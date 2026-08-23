@@ -328,6 +328,7 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 <div id="msg-alert" class="alert"></div>
 <form id="msg-form" onsubmit="return submitMessage(event)">
 <div class="form-group"><label>Aapka naam</label><input type="text" id="msg-name" placeholder="Naam likhein" required></div>
+<div class="form-group"><label>Email ID (optional - reply email milega)</label><input type="email" id="msg-email" placeholder="aap@email.com"></div>
 <div class="form-group"><label>Message</label><textarea id="msg-text" placeholder="Apna message yahan likhein..."></textarea></div>
 <div class="form-group"><label>File attach karein (Photo, PDF - optional, max 50MB)</label>
 <div class="file-upload">
@@ -642,6 +643,7 @@ function stopPolling(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
 function submitMessage(e){
 e.preventDefault();
 var name=document.getElementById('msg-name').value.trim();
+var email=document.getElementById('msg-email').value.trim();
 var text=document.getElementById('msg-text').value.trim();
 var files=document.getElementById('file-input').files;
 if(!text&&files.length===0){showAlert('msg-alert','error','Kam se kam message likhein ya file attach karein.');return false}
@@ -653,17 +655,19 @@ if(msgTimes.length>=2){showAlert('msg-alert','error','Ek minute me sirf 2 messag
 msgTimes.push(now);sessionStorage.setItem('rateLimit',JSON.stringify(msgTimes));
 var btn=document.getElementById('submit-btn');btn.disabled=true;btn.textContent='Bhej rahe hain...';
 var ts=Date.now();var fileData=[];var filesRead=0;var totalFiles=files.length;
-if(totalFiles===0){doSubmit(name,text,ts,[]);return false}
+if(totalFiles===0){doSubmit(name,email,text,ts,[]);return false}
 for(var i=0;i<totalFiles;i++){(function(f){
 if(f.size>52428800){showAlert('msg-alert','error','File "'+f.name+'" 50MB se bada hai.');btn.disabled=false;btn.textContent='Message + File Bhejein';return}
 var reader=new FileReader();
-reader.onload=function(e){fileData.push({name:f.name,size:f.size,type:f.type||'unknown',data:e.target.result});filesRead++;if(filesRead===totalFiles)doSubmit(name,text,ts,fileData)};
-reader.onerror=function(){filesRead++;if(filesRead===totalFiles)doSubmit(name,text,ts,fileData)};
+reader.onload=function(e){fileData.push({name:f.name,size:f.size,type:f.type||'unknown',data:e.target.result});filesRead++;if(filesRead===totalFiles)doSubmit(name,email,text,ts,fileData)};
+reader.onerror=function(){filesRead++;if(filesRead===totalFiles)doSubmit(name,email,text,ts,fileData)};
 reader.readAsDataURL(f)})(files[i])}
 return false}
-function doSubmit(name,text,ts,fileData){
-var msg={id:ts,name:name,text:text,files:fileData.map(function(f){return{name:f.name,size:f.size,type:f.type}}),time:new Date().toISOString()};
+function doSubmit(name,email,text,ts,fileData){
+var msg={id:ts,name:name,email:email,text:text,files:fileData.map(function(f){return{name:f.name,size:f.size,type:f.type}}),time:new Date().toISOString()};
 var fileName='messages/msg_'+ts+'.json';
+/* Send email notification to admin via Web3Forms */
+sendEmailNotification('admin',name,email,text,fileData);
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(msg,null,2))));
 fetch(GH_API+'/contents/'+fileName,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'New message from '+name,content:content})}).then(function(r){if(!r.ok){return safeJson(r).then(function(e){throw new Error(e.message||('HTTP '+r.status))})}return safeJson(r)}).then(function(data){
 if(data.content){
@@ -672,7 +676,7 @@ var fname='messages/files/msg_'+ts+'_'+f.name.replace(/[^a-zA-Z0-9.]/g,'_');
 fetch(GH_API+'/contents/'+fname,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'File: '+f.name,content:f.data.split(',')[1]})}).then(function(){saved++;if(saved===fileData.length)onSubmitDone()}).catch(function(){saved++;if(saved===fileData.length)onSubmitDone()})})}else{onSubmitDone()}
 }else{showAlert('msg-alert','error','Message save nahi hua.');btn.disabled=false;btn.textContent='Message + File Bhejein'}
 }).catch(function(err){showAlert('msg-alert','error','Error: '+(err.message||'Network'));btn.disabled=false;btn.textContent='Message + File Bhejein'})}
-function onSubmitDone(){var btn=document.getElementById('submit-btn');btn.disabled=false;btn.textContent='Message + File Bhejein';showAlert('msg-alert','success','Message admin dashboard pe bhej diya!');document.getElementById('msg-name').value='';document.getElementById('msg-text').value='';document.getElementById('file-input').value='';renderFileList();setTimeout(function(){var a=document.getElementById('msg-alert');a.classList.remove('show')},5000)}
+function onSubmitDone(){var btn=document.getElementById('submit-btn');btn.disabled=false;btn.textContent='Message + File Bhejein';showAlert('msg-alert','success','Message admin dashboard pe bhej diya!');document.getElementById('msg-name').value='';document.getElementById('msg-email').value='';document.getElementById('msg-text').value='';document.getElementById('file-input').value='';renderFileList();setTimeout(function(){var a=document.getElementById('msg-alert');a.classList.remove('show')},5000)}
 
 /* File upload UI */
 function initFileUpload(){var drop=document.getElementById('file-drop');var input=document.getElementById('file-input');input.addEventListener('change',renderFileList);drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('dragover')});drop.addEventListener('dragleave',function(e){drop.classList.remove('dragover')});drop.addEventListener('drop',function(e){e.preventDefault();drop.classList.remove('dragover');if(e.dataTransfer.files.length>0){input.files=e.dataTransfer.files;renderFileList()}})}
@@ -831,6 +835,11 @@ actions='<div class="wa-bubble-actions"><button class="btn btn-outline" onclick=
 var timeHtml='<div class="wa-bubble-time">'+time+'</div>';
 htmlParts.push('<div class="wa-bubble '+bubbleClass+groupClass+'">'+nameHtml+'<div class="wa-bubble-text">'+bodyHtml+'</div>'+filesHtml+'<div class="wa-bubble-bottom"><span class="wa-bubble-time">'+time+'</span></div>'+actions+'</div>');
 });
+/* Store last user email for admin reply */
+messages.forEach(function(m){
+if(!m.type&&m.email){store.lastUserEmail=m.email;store.lastUserName=m.name}
+});
+saveStore(store);
 container.innerHTML=htmlParts.join('');
 container.scrollTop=container.scrollHeight;
 var lu=document.getElementById('chat-last-update');
@@ -846,10 +855,55 @@ var btn=document.getElementById('reply-btn');btn.disabled=true;
 var ts=Date.now();
 var msg={id:ts,type:'reply',text:text,time:new Date().toISOString()};
 var fileName='messages/msg_'+ts+'.json';
+/* Send reply email to last user who provided email */
+var lastUserMsg=null;
+/* Will be set by loadMessages - use stored last email */
+var userEmail=store.lastUserEmail||'';
+var userName=store.lastUserName||'User';
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(msg,null,2))));
 fetch(GH_API+'/contents/'+fileName,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Admin reply',content:content})}).then(function(r){if(!r.ok)return safeJson(r).then(function(e){throw new Error(e.message||'Error')});return safeJson(r)}).then(function(){
-input.value='';btn.disabled=false;loadMessages();
+input.value='';btn.disabled=false;
+/* Send email to user if they provided email */
+if(userEmail){sendEmailNotification('user',userName,userEmail,text,[])}
+loadMessages();
 }).catch(function(err){btn.disabled=false;alert('Reply nahi gaya: '+(err.message||'Error'))});
+}
+
+/* Email notification via Web3Forms - free, no API key needed */
+var WEB3FORMS_KEY='YOUR_ACCESS_KEY_HERE';
+var ADMIN_EMAIL='tpa.fbd@metrohospitals.com';
+function sendEmailNotification(type,fromName,fromEmail,message,fileData){
+try{
+var subject,body,toEmail;
+if(type==='admin'){
+/* Email to admin: new message received */
+toEmail=ADMIN_EMAIL;
+subject='New Message from '+fromName+' - QR Group';
+body='Name: '+fromName+'\n';
+if(fromEmail){body+='Email: '+fromEmail+'\n'}
+body+='\nMessage:\n'+message+'\n';
+if(fileData&&fileData.length>0){
+body+='\nFiles attached: '+fileData.length+'\n';
+fileData.forEach(function(f){body+=' - '+f.name+' ('+formatSize(f.size)+')\n'});
+}
+body+='\n---\nSent from QR Group Messaging App';
+}else{
+/* Email to user: admin replied */
+toEmail=fromEmail;
+subject='Admin Reply - QR Group Messaging';
+body='Hi '+fromName+',\n\nAdmin ne aapka reply bheja:\n\n'+message+'\n\n---\nQR Group Messaging';
+}
+var formData=new FormData();
+formData.append('access_key',WEB3FORMS_KEY);
+formData.append('subject',subject);
+formData.append('from_name','QR Group Messaging');
+formData.append('to',toEmail);
+formData.append('message',body);
+fetch('https://api.web3forms.com/submit',{method:'POST',body:formData}).then(function(r){return r.json()}).then(function(data){
+if(data.success){console.log('Email sent successfully to '+toEmail)}
+else{console.log('Email failed:',data.message)}
+}).catch(function(e){console.log('Email error:',e)});
+}catch(e){console.log('Email function error:',e)}
 }
 
 /* Stats */
