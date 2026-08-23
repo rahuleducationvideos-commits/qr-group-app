@@ -426,7 +426,7 @@ var store=ensureStore();var isAdmin=false;
 /* Remote config - fetches password + adminNumber from config.json on GitHub */
 var remoteConfig={password:'admin123',adminNumber:''};
 function loadRemoteConfig(){
-fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
+fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){
 var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 remoteConfig=JSON.parse(content);
 store.password=remoteConfig.password||'admin123';
@@ -458,6 +458,11 @@ resolve(hex);
 }catch(e){resolve(str)}
 });
 }
+function safeJson(r){
+var ct=r.headers.get('content-type')||'';
+if(ct.indexOf('json')<0){return r.text().then(function(t){throw new Error('Server error: '+(t.substring(0,100)||('HTTP '+r.status)))})}
+return r.json();
+}
 function getFileExt(n){var p=n.split('.');return p.length>1?p.pop().substring(0,4).toUpperCase():'FILE'}
 function formatSize(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB'}
 function ghHeaders(){return{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'}}
@@ -488,7 +493,7 @@ alert('Session expire ho gaya (30 minute). Dobara login karein.');
 showPage('page-admin-login');return;
 }
 /* Check for new messages */
-fetch(GH_API+'/contents/messages',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(items){
+fetch(GH_API+'/contents/messages',{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(items){
 if(!items)return;var count=items.filter(function(f){return f.name.endsWith('.json')}).length;
 if(store.lastMsgCount>0&&count>store.lastMsgCount){
 playBeep();
@@ -499,7 +504,7 @@ store.lastMsgCount=count;saveStore(store);
 }).catch(function(){});
 /* Check if password was changed from another device */
 if(isAdmin){
-fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
+fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){
 var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 var cfg=JSON.parse(content);
 var remotePass=cfg.password||'admin123';
@@ -544,7 +549,7 @@ function doSubmit(name,text,ts,fileData){
 var msg={id:ts,name:name,text:text,files:fileData.map(function(f){return{name:f.name,size:f.size,type:f.type}}),time:new Date().toISOString()};
 var fileName='messages/msg_'+ts+'.json';
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(msg,null,2))));
-fetch(GH_API+'/contents/'+fileName,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'New message from '+name,content:content})}).then(function(r){if(!r.ok){return r.json().then(function(e){throw new Error(e.message||('HTTP '+r.status))})}return r.json()}).then(function(data){
+fetch(GH_API+'/contents/'+fileName,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'New message from '+name,content:content})}).then(function(r){if(!r.ok){return safeJson(r).then(function(e){throw new Error(e.message||('HTTP '+r.status))})}return safeJson(r)}).then(function(data){
 if(data.content){
 if(fileData.length>0){var saved=0;fileData.forEach(function(f){
 var fname='messages/files/msg_'+ts+'_'+f.name.replace(/[^a-zA-Z0-9.]/g,'_');
@@ -564,7 +569,7 @@ var btn=document.querySelector('#page-admin-login button[type=submit]');if(btn){
 var entered=document.getElementById('admin-pass').value;
 /* Try remote config first, fallback to local */
 sha256Async(entered).then(function(enteredHash){
-fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
+fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){
 var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 var cfg=JSON.parse(content);
 var storedPass=cfg.password||'admin123';
@@ -592,8 +597,8 @@ var sp=document.createElement('div');sp.className='loading';sp.id='load-spinner'
 }
 if(!list.querySelector('.wa-bubble')&&!list.querySelector('.empty')){list.innerHTML='<div class="loading">Messages load ho rahe hain...</div>'}
 /* Fetch messages/ and messages/files/ IN PARALLEL */
-var msgsPromise=fetch(GH_API+'/contents/messages',{headers:ghHeaders()}).then(function(r){return r.json()});
-var filesPromise=fetch(GH_API+'/contents/messages/files',{headers:ghHeaders()}).then(function(r){return r.json()}).catch(function(){return[]});
+var msgsPromise=fetch(GH_API+'/contents/messages',{headers:ghHeaders()}).then(function(r){return safeJson(r)});
+var filesPromise=fetch(GH_API+'/contents/messages/files',{headers:ghHeaders()}).then(function(r){return safeJson(r)}).catch(function(){return[]});
 Promise.all([msgsPromise,filesPromise]).then(function(results){
 var items=results[0];var fileItems=results[1];
 var sp2=document.getElementById('load-spinner');if(sp2)sp2.remove();
@@ -607,7 +612,7 @@ if(fileItems&&fileItems.length){fileItems.forEach(function(f){fileMap[f.name]=f}
 var messages=[];var loaded=0;var total=jsonFiles.length;
 /* Fetch ALL message JSONs IN PARALLEL */
 jsonFiles.forEach(function(f,idx){
-fetch(f.url,{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
+fetch(f.url,{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){
 var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 var msg=JSON.parse(content);msg._sha=f.sha;msg._path=f.path;msg._fileMap=fileMap;
 messages[idx]=msg;loaded++;
@@ -676,7 +681,7 @@ var ts=Date.now();
 var msg={id:ts,type:'reply',text:text,time:new Date().toISOString()};
 var fileName='messages/msg_'+ts+'.json';
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(msg,null,2))));
-fetch(GH_API+'/contents/'+fileName,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Admin reply',content:content})}).then(function(r){if(!r.ok)return r.json().then(function(e){throw new Error(e.message||'Error')});return r.json()}).then(function(){
+fetch(GH_API+'/contents/'+fileName,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Admin reply',content:content})}).then(function(r){if(!r.ok)return safeJson(r).then(function(e){throw new Error(e.message||'Error')});return safeJson(r)}).then(function(){
 input.value='';btn.disabled=false;loadMessages();
 }).catch(function(err){btn.disabled=false;alert('Reply nahi gaya: '+(err.message||'Error'))});
 }
@@ -691,17 +696,17 @@ document.getElementById('stat-files').textContent=totalFiles;
 }
 
 /* Delete */
-function deleteMessage(path){if(!confirm('Message delete karein?'))return;fetch(GH_API+'/contents/'+path,{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){return fetch(GH_API+'/contents/'+path,{method:'DELETE',headers:ghHeaders(),body:JSON.stringify({message:'Delete message',sha:data.sha})})}).then(function(){loadMessages()}).catch(function(){alert('Delete nahi hua.')})}
+function deleteMessage(path){if(!confirm('Message delete karein?'))return;fetch(GH_API+'/contents/'+path,{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){return fetch(GH_API+'/contents/'+path,{method:'DELETE',headers:ghHeaders(),body:JSON.stringify({message:'Delete message',sha:data.sha})})}).then(function(){loadMessages()}).catch(function(){alert('Delete nahi hua.')})}
 
 /* Settings */
 function saveSettings(){
 var num=document.getElementById('set-admin-number').value.trim();
 var a=document.getElementById('settings-alert');
 a.className='alert alert-success show';a.textContent='GitHub pe save ho raha hai...';
-fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
+fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){
 var newConfig={password:remoteConfig.password||store.password||'admin123',adminNumber:num};
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(newConfig,null,2))));
-fetch(GH_API+'/contents/config.json',{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Update admin number',content:content,sha:data.sha})}).then(function(r){return r.json()}).then(function(){
+fetch(GH_API+'/contents/config.json',{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Update admin number',content:content,sha:data.sha})}).then(function(r){return safeJson(r)}).then(function(){
 store.adminNumber=num;saveStore(store);remoteConfig.adminNumber=num;
 a.className='alert alert-success show';a.textContent='Settings sabhi devices pe update hui!';
 setTimeout(function(){a.classList.remove('show')},4000);
@@ -714,10 +719,10 @@ var a=document.getElementById('pass-alert');
 if(np.length<4){a.className='alert alert-error show';a.textContent='Kam se kam 4 character';return}
 a.className='alert alert-success show';a.textContent='GitHub pe save ho raha hai...';
 /* Save to config.json on GitHub - works on all devices */
-fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
+fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){
 sha256Async(np).then(function(hashedPw){var newConfig={password:hashedPw,adminNumber:document.getElementById('set-admin-number').value.trim()||''};
 var content=btoa(unescape(encodeURIComponent(JSON.stringify(newConfig,null,2))));
-fetch(GH_API+'/contents/config.json',{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Update password',content:content,sha:data.sha})}).then(function(r){return r.json()}).then(function(){
+fetch(GH_API+'/contents/config.json',{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'Update password',content:content,sha:data.sha})}).then(function(r){return safeJson(r)}).then(function(){
 /* DON'T update store.password locally - so polling detects mismatch and auto-logouts ALL devices */
 remoteConfig.password=np;
 a.className='alert alert-success show';a.textContent='Password update ho gaya! Sabhi devices se logout ho jayega.';
@@ -804,7 +809,7 @@ loadRemoteConfig();
 
 /* On page load, check if password was changed from another device */
 function checkPasswordChanged(){
-fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return r.json()}).then(function(data){
+fetch(GH_API+'/contents/config.json',{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){
 var content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
 var cfg=JSON.parse(content);
 var remotePass=cfg.password||'admin123';
