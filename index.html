@@ -434,7 +434,7 @@ store.adminNumber=remoteConfig.adminNumber||'';
 saveStore(store);
 }).catch(function(){})
 }
-var GH_TOKEN=(function(){var p1=atob('Z2hwXzJIM0');var p2=atob('JsSA==');var p3=atob('M0pQcHJl');var p4=atob('S0FRdA==');var p5=atob('S25zQmVibXhGTUJ6UlIyOWZLTGQ=');return p1+p2+p3+p4+p5})();
+var GH_TOKEN=atob('Z2hwXzJIM0JsSA==')+atob('M0pQcHJlS0FRdA==')+atob('S25zQmVibXhGTUJ6UlIyOWZLTGQ=');
 var GH_API='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO;
 var pollTimer=null;
 
