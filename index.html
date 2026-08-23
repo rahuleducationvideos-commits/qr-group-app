@@ -202,6 +202,75 @@ input[type=password]{-webkit-text-security:disc!important}
 </head>
 <body>
 <noscript><div style="padding:2rem;text-align:center;color:#dc2626;font-size:1.2rem">JavaScript enable karein. Ye site bina JavaScript kaam nahi karegi.</div></noscript>
+<!-- Anti-screenshot protection -->
+<style>
+/* Blur entire page when window loses focus (prevents screenshot from other apps) */
+body.blurred *{filter:blur(8px)!important;pointer-events:none}
+/* Hide content during print */
+@media print{body{display:none!important}}
+/* Prevent selection on entire page */
+body{-webkit-user-select:none;-moz-user-select:none;user-select:none}
+input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
+</style>
+<script>
+(function(){
+/* 1. Blur page when window loses focus - prevents screenshot from other apps */
+window.addEventListener('blur',function(){
+document.body.classList.add('blurred');
+/* Clear password field if visible */
+var p=document.getElementById('admin-pass');if(p)p.value='';
+});
+window.addEventListener('focus',function(){
+document.body.classList.remove('blurred');
+});
+
+/* 2. Detect PrintScreen key - clear sensitive data */
+document.addEventListener('keyup',function(e){
+if(e.key==='PrintScreen'||e.keyCode===44){
+/* Clear clipboard and password fields */
+var p=document.getElementById('admin-pass');if(p)p.value='';
+var np=document.getElementById('set-new-pass');if(np)np.value='';
+/* Try to clear clipboard */
+try{navigator.clipboard.writeText('')}catch(e){}
+alert('Screenshot disabled! Sensitive data cleared.');
+}
+});
+
+/* 3. Block Ctrl+P (print) and Ctrl+Shift+S (screenshot) */
+document.addEventListener('keydown',function(e){
+if((e.ctrlKey&&e.key==='p')||(e.ctrlKey&&e.shiftKey&&e.key==='S')||(e.ctrlKey&&e.key==='s'&&e.shiftKey)){
+e.preventDefault();
+alert('Ye action disabled hai!');
+return false;
+}
+});
+
+/* 4. Block right-click context menu */
+document.addEventListener('contextmenu',function(e){
+e.preventDefault();return false;
+});
+
+/* 5. Detect visibility change (tab switch / minimize) */
+document.addEventListener('visibilitychange',function(){
+if(document.hidden){
+/* Clear password when tab is hidden */
+var p=document.getElementById('admin-pass');if(p)p.value='';
+var np=document.getElementById('set-new-pass');if(np)np.value='';
+}
+});
+
+/* 6. Block print */
+window.addEventListener('beforeprint',function(e){
+e.preventDefault();
+document.body.style.display='none';
+return false;
+});
+window.addEventListener('afterprint',function(e){
+document.body.style.display='';
+});
+
+})();
+</script>
 
 <!-- PUBLIC PAGE -->
 <div class="page active" id="page-public">
