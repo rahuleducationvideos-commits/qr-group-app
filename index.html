@@ -836,14 +836,14 @@ filesHtml+='</div>';
 }
 var actions='';
 if(!isReply){
-actions='<div class="wa-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button>';
+actions='<div class="wa-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\',\''+(m._sha||'')+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button>';
 if(store.adminNumber){actions+='<a class="btn btn-success" target="_blank" href="https://wa.me/'+store.adminNumber+'?text='+encodeURIComponent('Reply to '+m.name)+'" style="font-size:.68rem;padding:.2rem .5rem">WhatsApp</a>'}
 actions+='</div>';
 }else{
-actions='<div class="wa-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button></div>';
+actions='<div class="wa-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\',\''+(m._sha||'')+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button></div>';
 }
 var timeHtml='<div class="wa-bubble-time">'+time+'</div>';
-htmlParts.push('<div class="wa-bubble '+bubbleClass+groupClass+'">'+nameHtml+'<div class="wa-bubble-text">'+bodyHtml+'</div>'+filesHtml+'<div class="wa-bubble-bottom"><span class="wa-bubble-time">'+time+'</span></div>'+actions+'</div>');
+htmlParts.push('<div class="wa-bubble '+bubbleClass+groupClass+'" data-path="'+m._path+'">'+nameHtml+'<div class="wa-bubble-text">'+bodyHtml+'</div>'+filesHtml+'<div class="wa-bubble-bottom"><span class="wa-bubble-time">'+time+'</span></div>'+actions+'</div>');
 });
 /* Store last user email for admin reply */
 messages.forEach(function(m){
@@ -949,7 +949,36 @@ document.getElementById('stat-files').textContent=totalFiles;
 }
 
 /* Delete */
-function deleteMessage(path){if(!confirm('Message delete karein?'))return;fetch(GH_API+'/contents/'+path,{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){return fetch(GH_API+'/contents/'+path,{method:'DELETE',headers:ghHeaders(),body:JSON.stringify({message:'Delete message',sha:data.sha})})}).then(function(){loadMessages()}).catch(function(){alert('Delete nahi hua.')})}
+function deleteMessage(path,sha){
+if(!confirm('Message delete karein?'))return;
+/* Find the bubble element and remove it IMMEDIATELY from UI */
+var bubbles=document.querySelectorAll('.wa-bubble');
+bubbles.forEach(function(b){
+if(b.getAttribute('data-path')===path){
+b.style.transition='opacity .2s ease,transform .2s ease';
+b.style.opacity='0';
+b.style.transform='scale(.8)';
+setTimeout(function(){b.remove()},200);
+}
+});
+/* If we have SHA, delete directly - no need for GET call */
+if(sha){
+fetch(GH_API+'/contents/'+path,{method:'DELETE',headers:ghHeaders(),body:JSON.stringify({message:'Delete message',sha:sha})}).then(function(){
+/* Decrement count */
+var sm=document.getElementById('stat-messages');
+if(sm){sm.textContent=Math.max(0,parseInt(sm.textContent)-1)}
+}).catch(function(){
+/* If delete failed, reload messages to restore */
+alert('Delete nahi hua. Retry karein.');
+loadMessages();
+});
+}else{
+/* Fallback: GET then DELETE (old method) */
+fetch(GH_API+'/contents/'+path,{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(data){
+return fetch(GH_API+'/contents/'+path,{method:'DELETE',headers:ghHeaders(),body:JSON.stringify({message:'Delete message',sha:data.sha})});
+}).catch(function(){alert('Delete nahi hua.')});
+}
+}
 
 /* Settings */
 function saveSettings(){
