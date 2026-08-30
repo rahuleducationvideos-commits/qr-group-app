@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR Group Messaging</title>
+<title>Message Bheje</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
@@ -333,7 +333,7 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 <!-- PUBLIC PAGE -->
 <div class="page active" id="page-public">
 <nav class="nav">
-<div class="nav-brand">QR<span>::</span>GroupJoin</div>
+<div class="nav-brand">Message Bheje</div>
 <div style="display:flex;gap:.5rem;align-items:center">
 <div class="status-bar" id="public-status"><div class="status-dot" id="public-status-dot"></div><span id="public-status-text">Offline</span></div>
 <button class="nav-btn" onclick="showPage('page-admin-login')">Admin</button>
@@ -365,7 +365,7 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 
 <!-- ADMIN LOGIN -->
 <div class="page" id="page-admin-login">
-<nav class="nav"><div class="nav-brand">QR<span>::</span>GroupJoin</div><button class="nav-btn" onclick="showPage('page-public')">Back</button></nav>
+<nav class="nav"><div class="nav-brand">Message Bheje</div><button class="nav-btn" onclick="showPage('page-public')">Back</button></nav>
 <div class="container"><div class="hero"><h1>Admin Login</h1><p>Password daalein.</p></div>
 <div class="card"><div id="login-alert" class="alert"></div>
 <form onsubmit="return adminLogin(event)"><div class="form-group"><label>Password</label><input type="password" id="admin-pass" placeholder="Admin password" required autofocus autocomplete="off" oncopy="return false" oncut="return false" onpaste="return false" oncontextmenu="return false" style="-webkit-user-select:none;user-select:none"></div><button type="submit" class="btn btn-primary">Login</button></form>
@@ -503,7 +503,7 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 <div class="wa-sp-section">Admin Email (jahan messages aayenge)</div>
 <div class="form-group">
 <label style="color:#8696a0;font-size:.78rem">Admin Email ID</label>
-<input type="email" class="wa-sp-input" id="set-admin-email" placeholder="tpa.fbd@metrohospitals.com">
+<input type="email" class="wa-sp-input" id="set-admin-email" placeholder="Admin email ID">
 </div>
 <div class="wa-sp-section">WhatsApp Number</div>
 <div class="form-group">
@@ -932,7 +932,7 @@ loadMessages();
 }
 
 /* Email notification via FormSubmit - FREE, NO API KEY needed */
-var ADMIN_EMAIL='tpa.fbd@metrohospitals.com';
+var ADMIN_EMAIL='';
 function getAdminEmail(){
 return store.adminEmail||remoteConfig.adminEmail||ADMIN_EMAIL;
 }
