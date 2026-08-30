@@ -149,8 +149,8 @@ input[type=password]{-webkit-text-security:disc!important}
 .wa-file:hover{background:rgba(255,255,255,.15)}
 .wa-file:active{transform:scale(.97)}
 .wa-file.loading{opacity:.5;pointer-events:none}
-.wa-file-img-wrap{position:relative;width:120px;height:120px;flex-shrink:0;border-radius:8px;overflow:hidden}
-.wa-file-img-wrap img{width:100%;height:100%;object-fit:cover}
+.wa-file-img-wrap{position:relative;width:100%;min-width:180px;max-width:240px;height:auto;flex-shrink:0;border-radius:8px;overflow:hidden;margin-bottom:.4rem}
+.wa-file-img-wrap img{width:100%;height:auto;max-height:300px;object-fit:cover;display:block}
 .wa-file-img-overlay{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.65);color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:.75rem}
 .wa-file-icon{font-family:var(--font-mono);font-size:.55rem;font-weight:700;background:rgba(255,255,255,.2);padding:.2rem .4rem;border-radius:4px;text-transform:uppercase;flex-shrink:0}
 .wa-file-body{flex:1;min-width:0}
@@ -335,7 +335,7 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 <nav class="nav">
 <div class="nav-brand">Message Bheje</div>
 <div style="display:flex;gap:.5rem;align-items:center">
-<div class="status-bar" id="public-status"><div class="status-dot" id="public-status-dot"></div><span id="public-status-text">Offline</span></div>
+<div class="status-bar" id="public-status" style="background:rgba(0,208,132,.15);padding:.25rem .6rem;border-radius:20px;border:1px solid rgba(0,208,132,.4)"><div class="status-dot online" id="public-status-dot" style="width:10px;height:10px"></div><span id="public-status-text" style="color:#00d084;font-weight:600">Admin Online</span></div>
 <button class="nav-btn" onclick="showPage('page-admin-login')">Admin</button>
 </div>
 </nav>
@@ -384,7 +384,7 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 </div>
 </div>
 <div style="display:flex;gap:.4rem;align-items:center">
-<span class="status-bar" style="font-size:.72rem"><div class="status-dot online"></div>Online</span>
+<span class="status-bar" style="font-size:.72rem;background:rgba(0,208,132,.15);padding:.25rem .6rem;border-radius:20px;border:1px solid rgba(0,208,132,.4)"><div class="status-dot online" style="width:10px;height:10px"></div><span style="color:#00d084;font-weight:600">Admin Online</span></span>
 <button class="wa-refresh" onclick="loadMessages()" title="Refresh">&#8635;</button>
 <button class="wa-refresh" onclick="showSettings()" title="Settings">&#9881;</button>
 <button class="wa-refresh" onclick="adminLogout()" title="Logout">&#10148;</button>
@@ -513,7 +513,7 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 <button class="btn btn-primary" onclick="saveSettings()" style="width:100%">Save Settings</button>
 <div id="settings-alert" class="alert" style="margin-top:.8rem"></div>
 <div style="font-size:.7rem;color:#8696a0;margin-top:.5rem">Pehli baar email aane pe activate karna hoga (email me link aayega).</div>
-<div class="wa-sp-section">Chat Wallpaper</div>
+<div class="wa-sp-section">Chat Wallpaper (apni pasand ka color chunein)</div>
 <div id="wallpaper-options" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:1rem">
 <div class="wp-option" onclick="setWallpaper('default')" data-wp="default" style="background:#0b1620;border:2px solid #00a884;border-radius:8px;height:50px;cursor:pointer"></div>
 <div class="wp-option" onclick="setWallpaper('dark')" data-wp="dark" style="background:#1a1a1a;border:2px solid #333;border-radius:8px;height:50px;cursor:pointer"></div>
@@ -895,7 +895,7 @@ actions+='</div>';
 actions='<div class="wa-bubble-actions"><button class="btn btn-outline" onclick="deleteMessage(\''+m._path+'\',\''+(m._sha||'')+'\')" style="font-size:.68rem;padding:.2rem .5rem">Delete</button></div>';
 }
 var timeHtml='<div class="wa-bubble-time">'+time+'</div>';
-htmlParts.push('<div class="wa-bubble '+bubbleClass+groupClass+'" data-path="'+m._path+'">'+nameHtml+'<div class="wa-bubble-text">'+bodyHtml+'</div>'+filesHtml+'<div class="wa-bubble-bottom"><span class="wa-bubble-time">'+time+'</span></div>'+actions+'</div>');
+htmlParts.push('<div class="wa-bubble '+bubbleClass+groupClass+'" data-path="'+m._path+'">'+nameHtml+filesHtml+'<div class="wa-bubble-text">'+bodyHtml+'</div><div class="wa-bubble-bottom"><span class="wa-bubble-time">'+time+'</span></div>'+actions+'</div>');
 });
 /* Store last user email for admin reply */
 messages.forEach(function(m){
@@ -1113,6 +1113,11 @@ var wallpaperColors={
 'teal':'#0a2e2e',
 'warm':'#1a1208'
 };
+function setCustomWallpaper(color){
+document.documentElement.style.setProperty('--chat-bg',color);
+store.wallpaper=color;saveStore(store);
+document.querySelectorAll('.wp-option').forEach(function(el){el.style.borderColor='#333'});
+}
 function setWallpaper(wp){
 /* Update CSS variable */
 document.documentElement.style.setProperty('--chat-bg',wallpaperColors[wp]||'#0b1620');
