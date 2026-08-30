@@ -684,9 +684,27 @@ var fname='messages/files/msg_'+ts+'_'+f.name.replace(/[^a-zA-Z0-9.]/g,'_');
 fetch(GH_API+'/contents/'+fname,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'File: '+f.name,content:f.data.split(',')[1]})}).then(function(){saved++;if(saved===fileData.length)onSubmitDone()}).catch(function(){saved++;if(saved===fileData.length)onSubmitDone()})})}else{onSubmitDone()}
 }else{showAlert('msg-alert','error','Message save nahi hua.');btn.disabled=false;btn.textContent='Message + File Bhejein'}
 }).catch(function(err){showAlert('msg-alert','error','Error: '+(err.message||'Network'));btn.disabled=false;btn.textContent='Message + File Bhejein'})}
-function onSubmitDone(){var btn=document.getElementById('submit-btn');btn.disabled=false;btn.textContent='Message + File Bhejein';var successMsg='Message bhej diya!';
-if(email){successMsg='Message bhej diya! Email copy aapke email pe bhej di gayi.'}
-showAlert('msg-alert','success',successMsg);document.getElementById('msg-name').value='';document.getElementById('msg-email').value='';document.getElementById('msg-text').value='';document.getElementById('file-input').value='';renderFileList();setTimeout(function(){var a=document.getElementById('msg-alert');a.classList.remove('show')},5000)}
+function onSubmitDone(){
+var btn=document.getElementById('submit-btn');
+if(btn){btn.disabled=false;btn.textContent='Message + File Bhejein'}
+showAlert('msg-alert','success','Message bhej diya! File attachment clear ho gayi.');
+/* Clear ALL form fields */
+var nameEl=document.getElementById('msg-name');if(nameEl)nameEl.value='';
+var emailEl=document.getElementById('msg-email');if(emailEl)emailEl.value='';
+var textEl=document.getElementById('msg-text');if(textEl)textEl.value='';
+/* Clear file input completely */
+var fileInput=document.getElementById('file-input');
+if(fileInput){
+fileInput.value='';
+try{fileInput.files=null}catch(e){}
+}
+/* Clear file list display */
+var fileList=document.getElementById('file-list');
+if(fileList){fileList.innerHTML=''}
+/* Call renderFileList to ensure UI updates */
+renderFileList();
+setTimeout(function(){var a=document.getElementById('msg-alert');a.classList.remove('show')},5000)
+}
 
 /* File upload UI */
 function initFileUpload(){var drop=document.getElementById('file-drop');var input=document.getElementById('file-input');input.addEventListener('change',renderFileList);drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('dragover')});drop.addEventListener('dragleave',function(e){drop.classList.remove('dragover')});drop.addEventListener('drop',function(e){e.preventDefault();drop.classList.remove('dragover');if(e.dataTransfer.files.length>0){input.files=e.dataTransfer.files;renderFileList()}})}
