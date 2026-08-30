@@ -106,6 +106,9 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .loading{text-align:center;padding:2rem;color:var(--text-dim);font-family:var(--font-mono)}
 .empty{text-align:center;padding:2rem;color:var(--text-dim)}
+.wp-option{transition:.2s;position:relative}
+.wp-option:hover{transform:scale(1.05)}
+.wp-option:active{transform:scale(.95)}
 /* Security: prevent text selection on sensitive elements */
 input[type=password]{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-text-security:disc}
 input[type=password]::selection{background:transparent}
@@ -489,7 +492,17 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 <button class="btn btn-primary" onclick="saveSettings()" style="width:100%">Save Settings</button>
 <div id="settings-alert" class="alert" style="margin-top:.8rem"></div>
 <div style="font-size:.7rem;color:#8696a0;margin-top:.5rem">Pehli baar email aane pe activate karna hoga (email me link aayega).</div>
-<div class="wa-sp-section">Theme</div>
+<div class="wa-sp-section">Chat Wallpaper</div>
+<div id="wallpaper-options" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:1rem">
+<div class="wp-option" onclick="setWallpaper('default')" data-wp="default" style="background:#0b1620;border:2px solid #00a884;border-radius:8px;height:50px;cursor:pointer"></div>
+<div class="wp-option" onclick="setWallpaper('dark')" data-wp="dark" style="background:#1a1a1a;border:2px solid #333;border-radius:8px;height:50px;cursor:pointer"></div>
+<div class="wp-option" onclick="setWallpaper('navy')" data-wp="navy" style="background:#0a1929;border:2px solid #333;border-radius:8px;height:50px;cursor:pointer"></div>
+<div class="wp-option" onclick="setWallpaper('forest')" data-wp="forest" style="background:#0d1f0d;border:2px solid #333;border-radius:8px;height:50px;cursor:pointer"></div>
+<div class="wp-option" onclick="setWallpaper('purple')" data-wp="purple" style="background:#1a0a2e;border:2px solid #333;border-radius:8px;height:50px;cursor:pointer"></div>
+<div class="wp-option" onclick="setWallpaper('maroon')" data-wp="maroon" style="background:#2e0a0a;border:2px solid #333;border-radius:8px;height:50px;cursor:pointer"></div>
+<div class="wp-option" onclick="setWallpaper('teal')" data-wp="teal" style="background:#0a2e2e;border:2px solid #333;border-radius:8px;height:50px;cursor:pointer"></div>
+<div class="wp-option" onclick="setWallpaper('warm')" data-wp="warm" style="background:#1a1208;border:2px solid #333;border-radius:8px;height:50px;cursor:pointer"></div>
+</div>
 <div class="wa-sp-toggle">
 <span class="wa-sp-toggle-label">Dark Mode</span>
 <div class="wa-sp-switch on" id="theme-switch" onclick="toggleTheme()"></div>
@@ -752,7 +765,7 @@ var an=document.getElementById('set-admin-number');if(an)an.value='';var ae=docu
 remoteConfig={password:'',adminNumber:''};
 showPage('page-public');
 }
-function renderAdmin(){if(!isAdmin){showPage('page-admin-login');return}loadRemoteConfig();store=ensureStore();document.getElementById('set-admin-number').value=store.adminNumber||'';var ae=document.getElementById('set-admin-email');if(ae)ae.value=store.adminEmail||'';if(store.adminName){document.getElementById('sp-name').textContent=store.adminName;document.getElementById('set-admin-name').value=store.adminName}loadMessages()}
+function renderAdmin(){if(!isAdmin){showPage('page-admin-login');return}loadRemoteConfig();store=ensureStore();document.getElementById('set-admin-number').value=store.adminNumber||'';if(store.wallpaper){setWallpaper(store.wallpaper)}var ae=document.getElementById('set-admin-email');if(ae)ae.value=store.adminEmail||'';if(store.adminName){document.getElementById('sp-name').textContent=store.adminName;document.getElementById('set-admin-name').value=store.adminName}loadMessages()}
 
 /* Load messages - FAST parallel fetch */
 function loadMessages(){
@@ -1068,6 +1081,27 @@ item.style.display=t.indexOf(q)>=0?'':'none';
 });
 }
 function toggleTheme(){var s=document.getElementById('theme-switch');s.classList.toggle('on')}
+/* Chat wallpaper change */
+var wallpaperColors={
+'default':'#0b1620',
+'dark':'#1a1a1a',
+'navy':'#0a1929',
+'forest':'#0d1f0d',
+'purple':'#1a0a2e',
+'maroon':'#2e0a0a',
+'teal':'#0a2e2e',
+'warm':'#1a1208'
+};
+function setWallpaper(wp){
+/* Update CSS variable */
+document.documentElement.style.setProperty('--chat-bg',wallpaperColors[wp]||'#0b1620');
+/* Save to localStorage */
+store.wallpaper=wp;saveStore(store);
+/* Update selected indicator */
+document.querySelectorAll('.wp-option').forEach(function(el){
+el.style.borderColor=el.getAttribute('data-wp')===wp?'#00a884':'#333';
+});
+}
 function toggleSound(){var s=document.getElementById('sound-switch');s.classList.toggle('on');store.soundOn=s.classList.contains('on');saveStore(store)}
 function toggleBadge(){var s=document.getElementById('badge-switch');s.classList.toggle('on')}
 function testSound(){playBeep()}
