@@ -324,23 +324,27 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 </div>
 </nav>
 <div class="container">
-<div class="hero"><h1>Message Bhejein</h1><p>Admin ko private message aur file bhejein.</p></div>
+<div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%);border-radius:16px;padding:2rem 1.5rem;margin-bottom:1.5rem;text-align:center;box-shadow:0 8px 32px rgba(102,126,234,.4);position:relative;overflow:hidden">
+<div style="position:absolute;top:-20px;right:-20px;font-size:4rem;opacity:.15">&#9993;</div>
+<h1 style="color:#fff;font-size:1.8rem;font-weight:700;margin-bottom:.5rem;text-shadow:0 2px 10px rgba(0,0,0,.3)">Message Bhejein</h1>
+<p style="color:rgba(255,255,255,.9);font-size:.95rem;margin:0">Admin ko private message aur file bhejein.</p>
+</div>
 <div class="card" id="message">
 <div class="card-label">Private Message + File</div>
 <h2>Admin ko message bhejein</h2>
 <p>Aapka message aur files sirf admin ke dashboard me jayenge.</p>
 <div id="msg-alert" class="alert"></div>
 <form id="msg-form" onsubmit="return submitMessage(event)">
-<div class="form-group"><label>Aapka naam</label><input type="text" id="msg-name" placeholder="Naam likhein" required></div>
-<div class="form-group"><label>Email ID (ispe message ki copy aayegi)</label><input type="email" id="msg-email" placeholder="aap@email.com" style="width:100%"></div>
-<div class="form-group"><label>Message</label><textarea id="msg-text" placeholder="Apna message yahan likhein..."></textarea></div>
-<div class="form-group"><label>File attach karein (Photo, PDF - optional, max 50MB)</label>
+<div class="form-group"><label style="color:#667eea;font-weight:600">&#128100; Aapka naam</label><input type="text" id="msg-name" placeholder="Naam likhein" required></div>
+<div class="form-group"><label style="color:#667eea;font-weight:600">&#9993; Email ID (ispe message ki copy aayegi)</label><input type="email" id="msg-email" placeholder="aap@email.com" style="width:100%"></div>
+<div class="form-group"><label style="color:#667eea;font-weight:600">&#128172; Message</label><textarea id="msg-text" placeholder="Apna message yahan likhein..."></textarea></div>
+<div class="form-group"><label style="color:#667eea;font-weight:600">&#128206; File attach karein (Photo, PDF - optional, max 50MB)</label>
 <div class="file-upload">
 <div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()"><div class="file-drop-icon">[ + ]</div><div class="file-drop-text"><strong>Click karein ya drag-drop karein</strong><br>Photo, PDF, ya koi bhi file (max 50MB)</div></div>
 <input type="file" id="file-input" class="file-input" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
 <div class="file-list" id="file-list"></div>
 </div></div>
-<button type="submit" class="btn btn-primary" id="submit-btn">Message + File Bhejein</button>
+<button type="submit" class="btn btn-primary" id="submit-btn" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%);font-size:1rem;padding:1rem;box-shadow:0 4px 15px rgba(102,126,234,.4)">&#128233; Message + File Bhejein</button>
 </form></div></div></div>
 
 <!-- ADMIN LOGIN -->
