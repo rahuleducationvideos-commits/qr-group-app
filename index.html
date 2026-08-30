@@ -13,12 +13,35 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:var(--font-body);color:var(--text);min-height:100vh;line-height:1.6;margin:0;padding:0;overflow-x:hidden}
 /* Live animated wallpaper */
-#live-wallpaper{position:fixed;top:0;left:0;right:0;bottom:0;z-index:-2;background:linear-gradient(-45deg,#ee7752,#e73c7e,#23a6d5,#23d5ab);background-size:400% 400%;animation:gradientShift 15s ease infinite}
-#live-wallpaper::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at 20% 50%,rgba(255,255,255,.1) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(255,255,255,.08) 0%,transparent 50%),radial-gradient(circle at 50% 80%,rgba(255,255,255,.05) 0%,transparent 50%)}
+/* Live nature wallpaper */
+#live-wallpaper{position:fixed;top:0;left:0;right:0;bottom:0;z-index:-2;overflow:hidden;background:linear-gradient(180deg,#87ceeb 0%,#b0e0e6 30%,#e0f6ff 50%,#87ceeb 100%)}
+/* Sun */
+#live-wallpaper::before{content:'';position:absolute;top:8%;right:12%;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,#fff5b8 0%,#ffe066 40%,#ffd43b 70%,transparent 100%);box-shadow:0 0 60px 20px rgba(255,213,79,.4);animation:sunPulse 4s ease-in-out infinite}
+/* Mountains */
+.lw-mountains{position:absolute;bottom:35%;left:0;right:0;height:200px;background:linear-gradient(180deg,#4a5d6e 0%,#2c3e50 100%);clip-path:polygon(0 100%,0 60%,10% 40%,15% 55%,25% 30%,35% 50%,45% 25%,55% 45%,65% 20%,75% 40%,85% 30%,95% 50%,100% 35%,100% 100%);z-index:1}
+.lw-mountains-2{position:absolute;bottom:35%;left:0;right:0;height:150px;background:linear-gradient(180deg,#5a6d7e 0%,#3c4e60 100%);clip-path:polygon(0 100%,0 70%,8% 50%,18% 65%,28% 40%,38% 60%,48% 35%,58% 55%,68% 30%,78% 50%,88% 40%,100% 55%,100% 100%);z-index:0;opacity:.7}
+/* Lake */
+.lw-lake{position:absolute;bottom:0;left:0;right:0;height:38%;background:linear-gradient(180deg,#4a90a4 0%,#2c6e7f 50%,#1a5060 100%);z-index:0}
+.lw-lake::before{content:'';position:absolute;top:0;left:0;right:0;height:100%;background:linear-gradient(180deg,rgba(255,255,255,.15) 0%,transparent 30%);animation:waterShimmer 3s ease-in-out infinite}
+.lw-lake::after{content:'';position:absolute;top:20%;left:10%;right:10%;height:2px;background:rgba(255,255,255,.3);animation:waterShimmer 2s ease-in-out infinite .5s}
+/* Clouds */
+.lw-cloud{position:absolute;background:rgba(255,255,255,.9);border-radius:50%;filter:blur(2px);animation:cloudMove linear infinite}
+.lw-cloud-1{width:120px;height:40px;top:15%;left:-120px;animation-duration:25s}
+.lw-cloud-2{width:80px;height:30px;top:25%;left:-80px;animation-duration:35s;animation-delay:5s}
+.lw-cloud-3{width:100px;height:35px;top:10%;left:-100px;animation-duration:30s;animation-delay:10s}
+.lw-cloud-4{width:60px;height:25px;top:20%;left:-60px;animation-duration:40s;animation-delay:15s}
+/* Birds */
+.lw-bird{position:absolute;font-size:.8rem;color:#333;z-index:2;animation:birdFly 20s linear infinite}
+.lw-bird-1{top:18%;left:-20px;animation-delay:0s}
+.lw-bird-2{top:22%;left:-20px;animation-delay:7s;font-size:.6rem}
+@keyframes sunPulse{0%,100%{box-shadow:0 0 60px 20px rgba(255,213,79,.4)}50%{box-shadow:0 0 80px 30px rgba(255,213,79,.6)}}
+@keyframes waterShimmer{0%,100%{opacity:.3;transform:translateX(0)}50%{opacity:.7;transform:translateX(10px)}}
+@keyframes cloudMove{from{transform:translateX(0)}to{transform:translateX(calc(100vw + 150px))}}
+@keyframes birdFly{0%{transform:translateX(0) translateY(0)}25%{transform:translateX(25vw) translateY(-10px)}50%{transform:translateX(50vw) translateY(5px)}75%{transform:translateX(75vw) translateY(-5px)}100%{transform:translateX(calc(100vw + 20px))}}
 /* Floating bubbles */
-.bubble-float{position:fixed;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none;z-index:-1;animation:floatUp 20s linear infinite}
-@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-@keyframes floatUp{0%{transform:translateY(100vh) translateX(0);opacity:0}10%{opacity:1}90%{opacity:.5}100%{transform:translateY(-100vh) translateX(50px);opacity:0}}
+
+
+
 .page{display:none;min-height:100vh;animation:pageIn .2s ease}.page.active{display:flex;flex-direction:column}@keyframes pageIn{from{opacity:0}to{opacity:1}}
 .nav{display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-bottom:1px solid rgba(255,255,255,.15);position:sticky;top:0;background:rgba(0,0,0,.3);backdrop-filter:blur(10px);z-index:50;box-shadow:0 2px 10px rgba(0,0,0,.2)}
 .nav-brand{font-family:var(--font-mono);font-weight:700;font-size:1rem;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.3)}
@@ -219,15 +242,17 @@ input[type=password]{-webkit-text-security:disc!important}
 </style>
 </head>
 <body>
-<div id="live-wallpaper"></div>
-<div class="bubble-float" style="width:60px;height:60px;left:10%;animation-delay:0s"></div>
-<div class="bubble-float" style="width:40px;height:40px;left:25%;animation-delay:3s"></div>
-<div class="bubble-float" style="width:80px;height:80px;left:45%;animation-delay:6s"></div>
-<div class="bubble-float" style="width:30px;height:30px;left:65%;animation-delay:2s"></div>
-<div class="bubble-float" style="width:50px;height:50px;left:80%;animation-delay:8s"></div>
-<div class="bubble-float" style="width:70px;height:70px;left:90%;animation-delay:5s"></div>
-<div class="bubble-float" style="width:35px;height:35px;left:15%;animation-delay:11s"></div>
-<div class="bubble-float" style="width:55px;height:55px;left:55%;animation-delay:14s"></div>
+<div id="live-wallpaper">
+<div class="lw-cloud lw-cloud-1"></div>
+<div class="lw-cloud lw-cloud-2"></div>
+<div class="lw-cloud lw-cloud-3"></div>
+<div class="lw-cloud lw-cloud-4"></div>
+<div class="lw-bird lw-bird-1">&#8693;</div>
+<div class="lw-bird lw-bird-2">&#8693;</div>
+<div class="lw-mountains-2"></div>
+<div class="lw-mountains"></div>
+<div class="lw-lake"></div>
+</div>
 <noscript><div style="padding:2rem;text-align:center;color:#dc2626;font-size:1.2rem">JavaScript enable karein. Ye site bina JavaScript kaam nahi karegi.</div></noscript>
 <!-- Anti-screenshot protection -->
 <style>
