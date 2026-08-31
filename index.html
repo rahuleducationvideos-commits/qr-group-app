@@ -676,8 +676,10 @@ showPage('page-admin-login');return;
 }
 /* Check for new messages */
 fetch(GH_API+'/contents/messages',{headers:ghHeaders()}).then(function(r){return safeJson(r)}).then(function(items){
-if(!items)return;var count=items.filter(function(f){return f.name.endsWith('.json')}).length;
-if(store.lastMsgCount>0&&count>store.lastMsgCount){
+if(!items||!Array.isArray(items))return;
+var msgFiles=items.filter(function(f){return f.name.endsWith('.json')&&f.name.startsWith('msg_')});
+var count=msgFiles.length;
+if(count>store.lastMsgCount){
 playBeep();
 var badge=document.getElementById('notif-badge');if(badge)badge.classList.add('show');
 loadMessages();
@@ -700,7 +702,7 @@ showPage('page-admin-login');
 }
 }).catch(function(){});
 }
-},5000);
+},3000);
 }
 function stopPolling(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
 
@@ -830,7 +832,7 @@ var sp2=document.getElementById('load-spinner');if(sp2)sp2.remove();
 if(!items||items.length===0){list.innerHTML='<div class="empty">Abhi koi message nahi.</div>';updateStats([]);return}
 var jsonFiles=items.filter(function(f){return f.name.endsWith('.json')});
 if(jsonFiles.length===0){list.innerHTML='<div class="empty">Abhi koi message nahi.</div>';updateStats([]);return}
-store.lastMsgCount=jsonFiles.length;saveStore(store);
+if(store.lastMsgCount===0||store.lastMsgCount<jsonFiles.length){store.lastMsgCount=jsonFiles.length;saveStore(store)}
 var badge=document.getElementById('notif-badge');if(badge)badge.classList.remove('show');
 var fileMap={};
 if(fileItems&&fileItems.length){fileItems.forEach(function(f){fileMap[f.name]=f})}
