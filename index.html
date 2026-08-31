@@ -150,13 +150,13 @@ input[type=password]{-webkit-user-drag:none}
 input[type=password]{-webkit-text-security:disc!important}
 @media screen and (-webkit-min-device-pixel-ratio:0){input[type=password]{-webkit-text-security:disc}}
 /* WhatsApp-style admin dashboard */
-.wa-header{background:var(--surface);padding:.6rem 1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.wa-header{background:rgba(30,41,59,.85);backdrop-filter:blur(10px);padding:.6rem 1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
 .wa-header-left{display:flex;align-items:center;gap:.6rem}
 .wa-avatar{width:38px;height:38px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.9rem;flex-shrink:0}
 .wa-header-info{display:flex;flex-direction:column}
 .wa-header-name{font-weight:600;font-size:.9rem;line-height:1.2}
 .wa-header-status{font-size:.7rem;color:var(--text-dim);line-height:1.2}
-.wa-chat-bg{background:var(--chat-bg);flex:1;overflow-y:auto;padding:.8rem;display:flex;flex-direction:column;gap:.4rem;min-height:0;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.wa-chat-bg{background:transparent;flex:1;overflow-y:auto;padding:.8rem;display:flex;flex-direction:column;gap:.4rem;min-height:0;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;position:relative;z-index:1}
 .wa-bubble{max-width:85%;padding:.4rem .7rem;border-radius:10px;font-size:.88rem;word-wrap:break-word;white-space:pre-wrap;position:relative;animation:bubbleIn .2s ease;line-height:1.4}@keyframes bubbleIn{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 .wa-bubble-text{margin-bottom:.15rem}
 .wa-bubble-bottom{display:flex;justify-content:flex-end;align-items:center;margin-top:.1rem}
@@ -183,7 +183,7 @@ input[type=password]{-webkit-text-security:disc!important}
 .wa-bubble-actions{margin-top:.3rem;display:flex;gap:.3rem}
 .wa-bubble-actions button,.wa-bubble-actions a{padding:.25rem .55rem;font-size:.65rem;border-radius:6px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#e9edef;cursor:pointer;text-decoration:none;transition:.15s}
 .wa-bubble-actions button:hover,.wa-bubble-actions a:hover{background:rgba(255,255,255,.15)}
-.wa-input-bar{background:var(--surface);padding:.5rem .75rem;border-top:1px solid var(--border);display:flex;gap:.5rem;align-items:center;flex-shrink:0}
+.wa-input-bar{background:rgba(30,41,59,.85);backdrop-filter:blur(10px);padding:.5rem .75rem;border-top:1px solid var(--border);display:flex;gap:.5rem;align-items:center;flex-shrink:0;position:relative;z-index:2}
 .wa-input-bar input{flex:1;padding:.55rem .9rem;background:#2a3942;color:#e9edef;border:none;border-radius:8px;font-family:var(--font-body);font-size:.85rem;outline:none}
 .wa-input-bar input::placeholder{color:#8696a0}
 .wa-input-bar input:focus{background:#313d45}
@@ -191,7 +191,18 @@ input[type=password]{-webkit-text-security:disc!important}
 .wa-send-btn:hover{background:#06cf9c}
 .wa-send-btn:disabled{opacity:.4}
 .wa-refresh{background:none;border:none;color:#8696a0;cursor:pointer;font-size:1rem;padding:.3rem}
-.wa-admin-page{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.wa-admin-page{display:flex;flex-direction:column;height:100vh;overflow:hidden;position:relative}
+/* Admin live wallpaper */
+.wa-admin-wallpaper{position:absolute;top:0;left:0;right:0;bottom:0;z-index:0;overflow:hidden;background:linear-gradient(180deg,#1a2a3a 0%,#0d1f2d 40%,#0a1520 100%)}
+.wa-admin-wallpaper::before{content:'';position:absolute;top:5%;right:8%;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,rgba(255,245,184,.3) 0%,rgba(255,213,79,.15) 50%,transparent 100%);animation:adminSunPulse 5s ease-in-out infinite}
+.wa-aw-mountains{position:absolute;bottom:30%;left:0;right:0;height:180px;background:linear-gradient(180deg,#1a2a3a 0%,#0d1520 100%);clip-path:polygon(0 100%,0 60%,10% 40%,15% 55%,25% 30%,35% 50%,45% 25%,55% 45%,65% 20%,75% 40%,85% 30%,95% 50%,100% 35%,100% 100%);opacity:.5}
+.wa-aw-mountains-2{position:absolute;bottom:30%;left:0;right:0;height:140px;background:linear-gradient(180deg,#1a2a3a 0%,#0d1520 100%);clip-path:polygon(0 100%,0 70%,8% 50%,18% 65%,28% 40%,38% 60%,48% 35%,58% 55%,68% 30%,78% 50%,88% 40%,100% 55%,100% 100%);opacity:.3}
+.wa-aw-cloud{position:absolute;background:rgba(255,255,255,.06);border-radius:50%;filter:blur(8px);animation:adminCloudMove linear infinite}
+.wa-aw-cloud-1{width:150px;height:50px;top:15%;left:-150px;animation-duration:40s}
+.wa-aw-cloud-2{width:100px;height:35px;top:25%;left:-100px;animation-duration:50s;animation-delay:10s}
+.wa-aw-cloud-3{width:120px;height:40px;top:10%;left:-120px;animation-duration:45s;animation-delay:20s}
+@keyframes adminSunPulse{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.1);opacity:.5}}
+@keyframes adminCloudMove{from{transform:translateX(0)}to{transform:translateX(calc(100vw + 200px))}}
 .wa-admin-body{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .wa-date-sep{text-align:center;margin:.8rem 0 .4rem;font-size:.65rem;color:#e9edef;background:rgba(233,237,239,.08);padding:.25rem .7rem;border-radius:8px;align-self:center;font-weight:500}
 .wa-bubble-grouped{margin-top:2px}
@@ -400,6 +411,13 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 <!-- ADMIN DASHBOARD - WhatsApp Style -->
 <div class="page" id="page-admin">
 <div class="wa-admin-page">
+<div class="wa-admin-wallpaper">
+<div class="wa-aw-cloud wa-aw-cloud-1"></div>
+<div class="wa-aw-cloud wa-aw-cloud-2"></div>
+<div class="wa-aw-cloud wa-aw-cloud-3"></div>
+<div class="wa-aw-mountains-2"></div>
+<div class="wa-aw-mountains"></div>
+</div>
 <div class="wa-header">
 <div class="wa-header-left">
 <div class="wa-avatar">A</div>
