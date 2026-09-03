@@ -274,14 +274,17 @@ body.blurred .page{display:none!important}
 /* Hide content during print */
 @media print{body{display:none!important}}
 /* Prevent selection on entire page */
-body{-webkit-user-select:none;-moz-user-select:none;user-select:none}
+body{-webkit-user-select:none;-moz-user-select:none;user-select:none;overflow-y:auto}
 input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 </style>
 <div id="sec-overlay"></div>
 <script>
 (function(){
-/* 1. BLACK OVERLAY when window loses focus */
+/* 1. BLACK OVERLAY when window loses focus - ONLY on admin page */
 window.addEventListener('blur',function(){
+/* Only blur if on admin page (security feature for admin only) */
+var adminPage=document.getElementById('page-admin');
+if(!adminPage||!adminPage.classList.contains('active'))return;
 document.body.classList.add('blurred');
 var p=document.getElementById('admin-pass');if(p)p.value='';
 var np=document.getElementById('set-new-pass');if(np)np.value='';
@@ -314,12 +317,14 @@ return false;
 }
 });
 
-/* 3. CONTINUOUS clipboard clearing - check every 300ms */
+/* 3. CONTINUOUS clipboard clearing - ONLY on admin page */
 setInterval(function(){
+/* Only check clipboard if on admin page */
+var adminPage=document.getElementById('page-admin');
+if(!adminPage||!adminPage.classList.contains('active'))return;
 try{
 navigator.clipboard.readText().then(function(text){
 if(text&&text.length>0){
-/* If clipboard has content, it might be a screenshot - clear it */
 navigator.clipboard.writeText('').catch(function(){});
 }
 }).catch(function(){});
@@ -749,7 +754,10 @@ reader.onerror=function(){filesRead++;if(filesRead===totalFiles)doSubmit(name,em
 reader.readAsDataURL(f)})(files[i])}
 return false}
 function doSubmit(name,email,text,ts,fileData){
-var msg={id:ts,name:name,email:email,text:text,files:fileData.map(function(f){return{name:f.name,size:f.size,type:f.type,path:'msg_'+ts+'_'+f.name.replace(/[^a-zA-Z0-9.]/g,'_')}}),time:new Date().toISOString()};
+try{
+/* Ensure fileData is always an array */
+if(!fileData)fileData=[];
+var msg={id:ts,name:name,email:email,text:text,files:fileData.map(function(f){return{name:f.name||'file',size:f.size||0,type:f.type||'unknown',path:'msg_'+ts+'_'+(f.name||'file').replace(/[^a-zA-Z0-9.]/g,'_')}}),time:new Date().toISOString()};
 var fileName='messages/msg_'+ts+'.json';
 /* Send email notification to admin via Web3Forms */
 sendEmailNotification('admin',name,email,text,fileData);
@@ -759,10 +767,17 @@ var content=btoa(unescape(encodeURIComponent(JSON.stringify(msg,null,2))));
 fetch(GH_API+'/contents/'+fileName,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'New message from '+name,content:content})}).then(function(r){if(!r.ok){return safeJson(r).then(function(e){throw new Error(e.message||('HTTP '+r.status))})}return safeJson(r)}).then(function(data){
 if(data.content){
 if(fileData.length>0){var saved=0;fileData.forEach(function(f){
-var fname='messages/files/msg_'+ts+'_'+f.name.replace(/[^a-zA-Z0-9.]/g,'_');
-fetch(GH_API+'/contents/'+fname,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'File: '+f.name,content:f.data.split(',')[1]})}).then(function(){saved++;if(saved===fileData.length)onSubmitDone()}).catch(function(){saved++;if(saved===fileData.length)onSubmitDone()})})}else{onSubmitDone()}
+try{
+var fname='messages/files/msg_'+ts+'_'+(f.name||'file').replace(/[^a-zA-Z0-9.]/g,'_');
+var base64Data=f.data?f.data.split(',')[1]:'';
+if(!base64Data){saved++;if(saved===fileData.length)onSubmitDone();return}
+fetch(GH_API+'/contents/'+fname,{method:'PUT',headers:ghHeaders(),body:JSON.stringify({message:'File: '+(f.name||'file'),content:base64Data})}).then(function(){saved++;if(saved===fileData.length)onSubmitDone()}).catch(function(){saved++;if(saved===fileData.length)onSubmitDone()})
+}catch(e){saved++;if(saved===fileData.length)onSubmitDone()}
+})}else{onSubmitDone()}
 }else{showAlert('msg-alert','error','Message save nahi hua.');btn.disabled=false;btn.textContent='Message + File Bhejein'}
-}).catch(function(err){showAlert('msg-alert','error','Error: '+(err.message||'Network'));btn.disabled=false;btn.textContent='Message + File Bhejein'})}
+}).catch(function(err){showAlert('msg-alert','error','Error: '+(err.message||'Network'));var btn=document.getElementById('submit-btn');if(btn){btn.disabled=false;btn.textContent='Message + File Bhejein'}})
+}catch(err){console.log('doSubmit error:',err);var btn=document.getElementById('submit-btn');if(btn){btn.disabled=false;btn.textContent='Message + File Bhejein'}showAlert('msg-alert','error','Error: '+err.message)}
+}
 function onSubmitDone(){
 var btn=document.getElementById('submit-btn');
 if(btn){btn.disabled=false;btn.textContent='Message + File Bhejein'}
@@ -1027,6 +1042,15 @@ body+='\nFiles attached: '+fileData.length+'\n';
 fileData.forEach(function(f){body+=' - '+f.name+' ('+formatSize(f.size)+')\n'});
 }
 body+='\nAdmin jald reply karenge.\n\n---\nQR Group Messaging';
+formData=new FormData();
+formData.append('_subject',subject);
+formData.append('name','QR Group App');
+formData.append('email',getAdminEmail()||'noreply@qrgroup.com');
+formData.append('message',body);
+formData.append('_template','box');
+fetch('https://formsubmit.co/'+toEmail,{method:'POST',body:formData,headers:{'Accept':'application/json'}}).then(function(r){return r.json()}).then(function(data){
+console.log('User copy email sent:',data.success)
+}).catch(function(e){console.log('User copy email error:',e)});
 }else{
 /* Email to user: admin replied */
 toEmail=fromEmail;
