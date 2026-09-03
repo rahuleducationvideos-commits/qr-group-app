@@ -392,8 +392,8 @@ var p=document.getElementById('admin-pass');if(p)p.value='';
 <div class="form-group"><label style="color:#667eea;font-weight:600">&#128172; Message</label><textarea id="msg-text" placeholder="Apna message yahan likhein..."></textarea></div>
 <div class="form-group"><label style="color:#667eea;font-weight:600">&#128206; File attach karein (Photo, PDF - optional, max 50MB)</label>
 <div class="file-upload">
-<div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()"><div class="file-drop-icon">[ + ]</div><div class="file-drop-text"><strong>Click karein ya drag-drop karein</strong><br>Photo, PDF, ya koi bhi file (max 50MB)</div></div>
-<input type="file" id="file-input" class="file-input" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+<div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()"><div class="file-drop-icon">[ + ]</div><div class="file-drop-text"><strong>Click karein ya drag-drop karein</strong><br>Photo, PDF, ya koi bhi file (max 10 files, 50MB per file)</div></div>
+<input type="file" id="file-input" class="file-input" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar">
 <div class="file-list" id="file-list"></div>
 </div></div>
 <button type="submit" class="btn btn-primary" id="submit-btn" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%);font-size:1rem;padding:1rem;box-shadow:0 4px 15px rgba(102,126,234,.4)">&#128233; Message + File Bhejein</button>
