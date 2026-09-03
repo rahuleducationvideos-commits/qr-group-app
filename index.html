@@ -749,7 +749,7 @@ reader.onerror=function(){filesRead++;if(filesRead===totalFiles)doSubmit(name,em
 reader.readAsDataURL(f)})(files[i])}
 return false}
 function doSubmit(name,email,text,ts,fileData){
-var msg={id:ts,name:name,email:email,text:text,files:fileData.map(function(f){return{name:f.name,size:f.size,type:f.type}}),time:new Date().toISOString()};
+var msg={id:ts,name:name,email:email,text:text,files:fileData.map(function(f){return{name:f.name,size:f.size,type:f.type,path:'msg_'+ts+'_'+f.name.replace(/[^a-zA-Z0-9.]/g,'_')}}),time:new Date().toISOString()};
 var fileName='messages/msg_'+ts+'.json';
 /* Send email notification to admin via Web3Forms */
 sendEmailNotification('admin',name,email,text,fileData);
@@ -920,8 +920,18 @@ var ext=getFileExt(f.name);
 var sanitized=f.name.replace(/[^a-zA-Z0-9.]/g,'_');
 var prefix='msg_'+m.id;
 var fileUrl='';var dlUrl='';
-if(m._fileMap){for(var k in m._fileMap){if(k.indexOf(prefix)===0&&k.indexOf(sanitized)>=0){fileUrl=m._fileMap[k].html_url;dlUrl=m._fileMap[k].download_url;break}}}
-if(!dlUrl){dlUrl='https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/main/messages/files/'+prefix+'_'+sanitized}
+if(m._fileMap){
+/* Try exact path match first */
+if(f.path&&m._fileMap[f.path]){fileUrl=m._fileMap[f.path].html_url;dlUrl=m._fileMap[f.path].download_url}
+/* Try prefix + sanitized match */
+if(!dlUrl){for(var k in m._fileMap){if(k.indexOf(prefix)===0&&k.indexOf(sanitized)>=0){fileUrl=m._fileMap[k].html_url;dlUrl=m._fileMap[k].download_url;break}}}
+/* Try matching by sanitized filename in ANY file (cross-message match) */
+if(!dlUrl){for(var k in m._fileMap){if(k.indexOf(sanitized)>=0){fileUrl=m._fileMap[k].html_url;dlUrl=m._fileMap[k].download_url;break}}}
+}
+if(!dlUrl){
+/* Use stored path if available, otherwise construct from prefix */
+var storedPath=f.path||(prefix+'_'+sanitized);
+dlUrl='https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/main/messages/files/'+storedPath}
 var fName=f.name.length>22?f.name.substring(0,20)+'..':f.name;
 if(f.type&&f.type.indexOf('image')===0){
 filesHtml+='<div class="wa-file" onclick="downloadFile(this,\''+dlUrl+'\',\''+escapeHtml(f.name).replace(/'/g,'')+'\')"><div class="wa-file-img-wrap"><img src="'+dlUrl+'" alt="'+escapeHtml(f.name)+'" onerror="this.parentNode.style.display=\'none\'"><div class="wa-file-img-overlay">&#8595;</div></div><div class="wa-file-body"><span class="wa-file-name">'+escapeHtml(fName)+'</span><span class="wa-file-meta"><span class="wa-file-icon">'+ext+'</span>'+formatSize(f.size)+'</span></div></div>';
@@ -1187,6 +1197,17 @@ setTimeout(function(){a.classList.remove('show')},3000);
 /* Download file on click - fetch blob then download (works cross-origin, supports print) */
 function downloadFile(el,url,filename){
 if(el){el.classList.add('loading');var oldHTML=el.innerHTML;el.innerHTML='<span style="font-size:.72rem;opacity:.7">Downloading...</span>'}
+/* Try fetch with auth token first (works for private + public repos) */
+var authUrl=url;
+fetch(url,{headers:ghHeaders()}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.blob()}).then(function(blob){
+var u=URL.createObjectURL(blob);
+var a=document.createElement('a');
+a.href=u;a.download=filename||'download';
+document.body.appendChild(a);a.click();document.body.removeChild(a);
+setTimeout(function(){URL.revokeObjectURL(u)},10000);
+if(el){el.classList.remove('loading');el.innerHTML=oldHTML}
+}).catch(function(){
+/* Fallback 1: try without auth (public raw URL) */
 fetch(url).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.blob()}).then(function(blob){
 var u=URL.createObjectURL(blob);
 var a=document.createElement('a');
@@ -1195,9 +1216,10 @@ document.body.appendChild(a);a.click();document.body.removeChild(a);
 setTimeout(function(){URL.revokeObjectURL(u)},10000);
 if(el){el.classList.remove('loading');el.innerHTML=oldHTML}
 }).catch(function(){
-/* Fallback: open in new tab for print/save */
+/* Fallback 2: open in new tab */
 window.open(url,'_blank');
 if(el){el.classList.remove('loading');el.innerHTML=oldHTML}
+});
 });
 }
 
